@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MailCheck, Send, User, Users, MessageSquare, Utensils } from 'lucide-react';
+import { MailCheck, Send, User, Users, MessageSquare, Utensils, Flower2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,8 +8,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useRSVPPageData } from '@/hooks/useRSVPPageData';
 
 const RSVPPage: React.FC = () => {
+  const { data: rsvpData } = useRSVPPageData();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [attending, setAttending] = useState<string | undefined>(undefined);
@@ -70,13 +72,51 @@ const RSVPPage: React.FC = () => {
   };
 
   return (
-    <div className="py-12 animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-      <div className="max-w-2xl mx-auto bg-card p-8 md:p-12 rounded-lg shadow-xl">
+    <div className="py-12 animate-fade-in-up opacity-0 relative min-h-screen" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+      {/* Enhanced Background with Florals */}
+      <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
+        {rsvpData.backgroundImage && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-20"
+            style={{ backgroundImage: `url(${rsvpData.backgroundImage})` }}
+          />
+        )}
+        {/* Floating Floral Elements */}
+        <div className="absolute top-10 left-10 text-pink-300 opacity-20 animate-pulse">
+          <Flower2 size={80} className="animate-bounce" />
+        </div>
+        <div className="absolute top-32 right-20 text-purple-300 opacity-15 animate-pulse delay-1000">
+          <Flower2 size={60} className="animate-float" />
+        </div>
+        <div className="absolute bottom-32 left-16 text-pink-400 opacity-20 animate-pulse delay-2000">
+          <Flower2 size={70} className="animate-bounce" />
+        </div>
+        <div className="absolute bottom-20 right-32 text-purple-400 opacity-25 animate-pulse delay-500">
+          <Flower2 size={50} className="animate-float" />
+        </div>
+        {/* Scattered petals */}
+        <div className="absolute top-1/4 left-1/3 text-pink-200 opacity-30 animate-spin-slow">
+          <div className="w-4 h-4 bg-pink-300 rounded-full animate-pulse"></div>
+        </div>
+        <div className="absolute top-1/2 right-1/4 text-purple-200 opacity-25 animate-spin-slow delay-1000">
+          <div className="w-3 h-3 bg-purple-300 rounded-full animate-pulse"></div>
+        </div>
+        <div className="absolute bottom-1/3 left-1/4 text-pink-200 opacity-20 animate-spin-slow delay-2000">
+          <div className="w-5 h-5 bg-pink-400 rounded-full animate-pulse"></div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-sm p-8 md:p-12 rounded-3xl shadow-2xl border border-pink-200 relative z-10">
         <div className="text-center mb-10">
-          <MailCheck className="text-primary mx-auto mb-4" size={64} strokeWidth={1.5} />
-          <h1 className="text-4xl md:text-5xl font-playfair text-primary mb-2">Kindly RSVP</h1>
-          <p className="text-foreground/80 text-lg">We'd love for you to join us!</p>
-          <p className="text-sm text-muted-foreground mt-1">Please respond by August 15th, 2025.</p>
+          <div className="relative">
+            <MailCheck className="text-primary mx-auto mb-4 animate-pulse" size={64} strokeWidth={1.5} />
+            <div className="absolute -top-2 -right-2 text-pink-300 opacity-60">
+              <Flower2 size={32} />
+            </div>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-playfair text-primary mb-2">{rsvpData.title}</h1>
+          <p className="text-foreground/80 text-lg">{rsvpData.subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-1">{rsvpData.deadline}</p>
           <div className="w-24 h-1 bg-secondary mx-auto rounded-full mt-4"></div>
         </div>
 
@@ -171,7 +211,7 @@ const RSVPPage: React.FC = () => {
             <Button 
               type="submit" 
               size="lg" 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto px-10 py-3 text-lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto px-10 py-3 text-lg shadow-xl"
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Sending...' : 'Submit RSVP'}

@@ -1,118 +1,145 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { Heart, CalendarDays, MapPin } from 'lucide-react';
+import { Heart, Calendar, MapPin, Flower2 } from 'lucide-react';
+import { useHomePageData } from '@/hooks/useHomePageData';
 
-const Index: React.FC = () => {
-  // Default values
-  const defaultData = {
-    backgroundImage: "https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
-    coupleNames: "Liam & Mia",
-    weddingDate: "October 25th, 2025",
-    ceremonyTime: "3:00 PM",
-    venueName: "The Enchanted Gardens",
-    venueAddress: "123 Dreamy Lane, Wonderland"
-  };
+const Index = () => {
+  const { data, loading } = useHomePageData();
 
-  const [homeData, setHomeData] = useState(defaultData);
-
-  useEffect(() => {
-    // Load data from localStorage if available
-    const storedData = localStorage.getItem('homePageData');
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData);
-        setHomeData({
-          backgroundImage: parsedData.backgroundImage || defaultData.backgroundImage,
-          coupleNames: parsedData.coupleNames || defaultData.coupleNames,
-          weddingDate: parsedData.weddingDate || defaultData.weddingDate,
-          ceremonyTime: parsedData.ceremonyTime || defaultData.ceremonyTime,
-          venueName: parsedData.venueName || defaultData.venueName,
-          venueAddress: parsedData.venueAddress || defaultData.venueAddress
-        });
-      } catch (error) {
-        console.error('Error parsing stored home data:', error);
-      }
-    }
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
+        <Flower2 className="text-purple-500 mx-auto mb-4 animate-pulse" size={64} />
+      </div>
+    );
+  }
 
   return (
-    <div className="animate-fade-in">
-      {/* Hero Section */}
+    <div className="min-h-screen">
+      {/* Hero Section with Enhanced Florals */}
       <section 
-        className="relative bg-cover bg-center py-32 md:py-48 rounded-lg shadow-2xl overflow-hidden animate-fade-in opacity-0"
-        style={{ backgroundImage: `url(${homeData.backgroundImage})`, animationDelay: '0.1s', animationFillMode: 'forwards' }}
+        className="min-h-screen bg-cover bg-center bg-fixed relative overflow-hidden"
+        style={{ backgroundImage: `url(${data.backgroundImage})` }}
       >
-        <div className="absolute inset-0 bg-black/40"></div>
-        <div className="relative container mx-auto text-center text-white px-6">
-          <h1 className="text-5xl md:text-7xl font-playfair mb-4 animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-            {homeData.coupleNames}
-          </h1>
-          <p className="text-xl md:text-2xl font-lato mb-8 animate-fade-in-up opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
-            Are joyfully inviting you to celebrate their wedding
-          </p>
-          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.7s', animationFillMode: 'forwards' }}>
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-3">
-              <Link to="/rsvp">RSVP Now</Link>
-            </Button>
+        {/* Floating Floral Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-10 left-10 text-pink-300 opacity-30 animate-pulse">
+            <Flower2 size={80} className="animate-bounce" />
+          </div>
+          <div className="absolute top-32 right-20 text-purple-300 opacity-25 animate-pulse delay-1000">
+            <Flower2 size={60} className="animate-float" />
+          </div>
+          <div className="absolute bottom-32 left-16 text-pink-400 opacity-20 animate-pulse delay-2000">
+            <Flower2 size={70} className="animate-bounce" />
+          </div>
+          <div className="absolute bottom-20 right-32 text-purple-400 opacity-30 animate-pulse delay-500">
+            <Flower2 size={50} className="animate-float" />
+          </div>
+          {/* Scattered petals */}
+          <div className="absolute top-1/4 left-1/3 text-pink-200 opacity-20 animate-spin-slow">
+            <div className="w-4 h-4 bg-pink-300 rounded-full animate-pulse"></div>
+          </div>
+          <div className="absolute top-1/2 right-1/4 text-purple-200 opacity-25 animate-spin-slow delay-1000">
+            <div className="w-3 h-3 bg-purple-300 rounded-full animate-pulse"></div>
+          </div>
+          <div className="absolute bottom-1/3 left-1/4 text-pink-200 opacity-20 animate-spin-slow delay-2000">
+            <div className="w-5 h-5 bg-pink-400 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+
+        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen text-center text-white px-4">
+          <div className="max-w-4xl mx-auto animate-fade-in-up opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
+            <div className="mb-8 relative">
+              <Flower2 className="text-white/80 mx-auto mb-6 animate-pulse" size={64} strokeWidth={1} />
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-playfair mb-4 tracking-wide leading-tight">
+                {data.coupleNames}
+              </h1>
+              <div className="w-32 h-1 bg-white/60 mx-auto rounded-full mb-6"></div>
+              <p className="text-xl md:text-2xl lg:text-3xl font-light tracking-widest opacity-90">
+                are getting married
+              </p>
+            </div>
+            
+            <div className="space-y-4 text-lg md:text-xl bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 shadow-2xl">
+              <div className="flex items-center justify-center space-x-3">
+                <Calendar className="text-pink-200" size={24} />
+                <span className="font-light">{data.weddingDate} at {data.ceremonyTime}</span>
+              </div>
+              <div className="flex items-center justify-center space-x-3">
+                <MapPin className="text-pink-200" size={24} />
+                <span className="font-light">{data.venueName}</span>
+              </div>
+              <div className="text-sm opacity-80">{data.venueAddress}</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Welcome Message & Details Section */}
-      <section className="py-16 md:py-24 text-center">
-        <div className="max-w-3xl mx-auto animate-fade-in-up opacity-0" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
-          <Heart className="text-primary mx-auto mb-6" size={56} strokeWidth={1.5}/>
-          <h2 className="text-4xl font-playfair text-primary mb-6">Join Us for Our Special Day</h2>
-          <p className="text-lg text-foreground/80 leading-relaxed mb-8">
-            We are so excited to begin our new journey together and can't wait to share this magical day with our dearest family and friends. 
-            Your love and support mean the world to us. Explore our website to find out more about our story, view our gallery, and RSVP to our celebration.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-            <div className="bg-card p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="flex items-center mb-3">
-                <CalendarDays size={28} className="text-secondary mr-3" />
-                <h3 className="text-2xl font-playfair text-secondary">Date & Time</h3>
-              </div>
-              <p className="text-foreground/70">Saturday, {homeData.weddingDate}</p>
-              <p className="text-foreground/70">Ceremony at {homeData.ceremonyTime}</p>
-              <p className="text-foreground/70">Reception to follow</p>
-            </div>
-            <div className="bg-card p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="flex items-center mb-3">
-                <MapPin size={28} className="text-secondary mr-3" />
-                <h3 className="text-2xl font-playfair text-secondary">Location</h3>
-              </div>
-              <p className="text-foreground/70">{homeData.venueName}</p>
-              <p className="text-foreground/70">{homeData.venueAddress}</p>
-              <Link to="#" className="text-primary hover:underline text-sm mt-1 inline-block">View Map</Link>
-            </div>
+      {/* Love Story Section with Enhanced Design */}
+      <section className="py-24 bg-gradient-to-br from-pink-50 via-white to-purple-50 relative overflow-hidden">
+        {/* Background Florals */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-20 left-10 text-pink-400">
+            <Flower2 size={200} />
+          </div>
+          <div className="absolute bottom-20 right-10 text-purple-400">
+            <Flower2 size={150} />
           </div>
         </div>
-      </section>
 
-      {/* Call to Action to other pages */}
-      <section className="py-16 bg-muted rounded-lg">
-        <div className="container mx-auto text-center">
-            <h2 className="text-3xl font-playfair text-primary mb-8 animate-fade-in-up opacity-0" style={{ animationDelay: '0.9s', animationFillMode: 'forwards' }}>Discover More</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '1.0s', animationFillMode: 'forwards' }}>
-                    <Button asChild variant="outline" className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground py-6 text-md">
-                        <Link to="/story">Our Love Story</Link>
-                    </Button>
-                </div>
-                <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '1.1s', animationFillMode: 'forwards' }}>
-                    <Button asChild variant="outline" className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground py-6 text-md">
-                        <Link to="/gallery">Photo Gallery</Link>
-                    </Button>
-                </div>
-                <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}>
-                    <Button asChild variant="outline" className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground py-6 text-md">
-                        <Link to="/rsvp">Send Your RSVP</Link>
-                    </Button>
-                </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16 animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+            <div className="flex items-center justify-center mb-6">
+              <Heart className="text-pink-600 mr-3" size={40} strokeWidth={1.5} />
+              <h2 className="text-4xl md:text-6xl font-playfair text-pink-800">Our Love Story</h2>
+              <Heart className="text-pink-600 ml-3" size={40} strokeWidth={1.5} />
             </div>
+            <div className="w-32 h-1 bg-pink-300 mx-auto rounded-full"></div>
+          </div>
+
+          <div className="max-w-4xl mx-auto space-y-16">
+            {/* Story chapters with enhanced design */}
+            <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-2xl border border-pink-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 text-pink-100 opacity-50">
+                  <Flower2 size={120} />
+                </div>
+                <h3 className="text-2xl md:text-3xl font-playfair text-pink-800 mb-6 relative z-10">The First Spark</h3>
+                <p className="text-lg leading-relaxed text-gray-700 relative z-10">{data.loveStory.firstSpark}</p>
+              </div>
+            </div>
+
+            <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-2xl border border-purple-100 relative overflow-hidden">
+                <div className="absolute bottom-0 left-0 text-purple-100 opacity-50">
+                  <Flower2 size={100} />
+                </div>
+                <h3 className="text-2xl md:text-3xl font-playfair text-purple-800 mb-6 relative z-10">Adventures Together</h3>
+                <p className="text-lg leading-relaxed text-gray-700 relative z-10">{data.loveStory.adventures}</p>
+              </div>
+            </div>
+
+            <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-2xl border border-pink-100 relative overflow-hidden">
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 text-pink-100 opacity-50">
+                  <Flower2 size={110} />
+                </div>
+                <h3 className="text-2xl md:text-3xl font-playfair text-pink-800 mb-6 relative z-10">The Proposal</h3>
+                <p className="text-lg leading-relaxed text-gray-700 relative z-10">{data.loveStory.proposal}</p>
+              </div>
+            </div>
+
+            <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '1.0s', animationFillMode: 'forwards' }}>
+              <div className="bg-gradient-to-br from-pink-100 to-purple-100 rounded-3xl p-8 md:p-12 shadow-2xl border border-pink-200 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-20">
+                  <Flower2 className="absolute top-4 right-4 text-pink-400" size={80} />
+                  <Flower2 className="absolute bottom-4 left-4 text-purple-400" size={60} />
+                </div>
+                <h3 className="text-2xl md:text-3xl font-playfair text-purple-800 mb-6 relative z-10">Our Next Chapter</h3>
+                <p className="text-lg leading-relaxed text-gray-700 relative z-10">{data.loveStory.nextChapter}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </div>

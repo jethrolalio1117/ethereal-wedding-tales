@@ -10,12 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useHomePageData } from '@/hooks/useHomePageData';
 
 interface Guest {
   id: string;
   name: string;
   email: string;
-  attending?: boolean;
+  attending?: boolean | null;
   guest_count?: number;
 }
 
@@ -24,30 +25,23 @@ const EmailTools: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [recipientType, setRecipientType] = useState<string>('all');
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
-  const [coupleNames, setCoupleNames] = useState('Wedding Couple');
+  const [subject, setSubject] = useState('Important Update About Our Wedding!');
+  const [message, setMessage] = useState(`Dear {name},
+
+We hope this message finds you well! We wanted to reach out with some important updates about our upcoming wedding celebration.
+
+Please visit our wedding website at {website_url} for the latest information, including venue details, schedule updates, and more.
+
+We're so excited to celebrate this special day with you and can't wait to see you there!
+
+With love and gratitude,
+{couple_names}`);
   const { toast } = useToast();
+  const { data: homeData } = useHomePageData();
 
   useEffect(() => {
     fetchGuests();
-    extractCoupleNames();
   }, []);
-
-  const extractCoupleNames = () => {
-    // Try to get couple names from the hero section
-    try {
-      const heroElement = document.querySelector('h1');
-      if (heroElement && heroElement.textContent) {
-        const heroText = heroElement.textContent.trim();
-        if (heroText.includes('&') || heroText.includes('and')) {
-          setCoupleNames(heroText);
-        }
-      }
-    } catch (error) {
-      console.log('Could not extract couple names from hero section');
-    }
-  };
 
   const fetchGuests = async () => {
     try {
@@ -57,6 +51,7 @@ const EmailTools: React.FC = () => {
         .order('name');
 
       if (error) throw error;
+      console.log('Fetched guests:', data);
       setGuests(data || []);
     } catch (error) {
       console.error('Error fetching guests:', error);
@@ -71,16 +66,27 @@ const EmailTools: React.FC = () => {
   };
 
   const getFilteredGuests = (): Guest[] => {
+    console.log('All guests:', guests);
+    console.log('Filtering by type:', recipientType);
+    
+    let filtered: Guest[] = [];
+    
     switch (recipientType) {
       case 'confirmed':
-        return guests.filter(guest => guest.attending === true);
+        filtered = guests.filter(guest => guest.attending === true);
+        break;
       case 'declined':
-        return guests.filter(guest => guest.attending === false);
+        filtered = guests.filter(guest => guest.attending === false);
+        break;
       case 'pending':
-        return guests.filter(guest => guest.attending === null || guest.attending === undefined);
+        filtered = guests.filter(guest => guest.attending === null || guest.attending === undefined);
+        break;
       default:
-        return guests;
+        filtered = guests;
     }
+    
+    console.log('Filtered guests:', filtered);
+    return filtered;
   };
 
   const handleSendEmails = async () => {
@@ -113,7 +119,11 @@ const EmailTools: React.FC = () => {
         return acc;
       }, {} as { [email: string]: string });
 
+      console.log('Sending emails to:', recipientEmails);
+      console.log('Guest names mapping:', guestNames);
+
       const websiteUrl = window.location.origin;
+      const coupleNames = homeData.coupleNames || 'Wedding Couple';
 
       const response = await supabase.functions.invoke('send-email', {
         body: {
@@ -140,8 +150,17 @@ const EmailTools: React.FC = () => {
         });
         
         // Clear form
-        setSubject('');
-        setMessage('');
+        setSubject('Important Update About Our Wedding!');
+        setMessage(`Dear {name},
+
+We hope this message finds you well! We wanted to reach out with some important updates about our upcoming wedding celebration.
+
+Please visit our wedding website at {website_url} for the latest information, including venue details, schedule updates, and more.
+
+We're so excited to celebrate this special day with you and can't wait to see you there!
+
+With love and gratitude,
+{couple_names}`);
       } else {
         toast({
           title: "Partial Success",
@@ -236,18 +255,6 @@ const EmailTools: React.FC = () => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-pink-700 mb-2">
-                Couple Names (for email personalization)
-              </label>
-              <Input
-                value={coupleNames}
-                onChange={(e) => setCoupleNames(e.target.value)}
-                placeholder="e.g., John & Jane"
-                className="border-pink-300 focus:border-pink-500 focus:ring-pink-200"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-pink-700 mb-2">
                 Send to
               </label>
               <Select value={recipientType} onValueChange={setRecipientType}>
@@ -305,15 +312,15 @@ const EmailTools: React.FC = () => {
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Write your message here. Use {name} to personalize with guest names and {website_url} for your website link."
-                className="border-pink-300 focus:border-pink-500 focus:ring-pink-200 min-h-[120px]"
+                placeholder="Write your message here. Use {name} to personalize with guest names, {website_url} for your website link, and {couple_names} for the couple's names."
+                className="border-pink-300 focus:border-pink-500 focus:ring-pink-200 min-h-[200px]"
               />
               <div className="text-xs text-purple-600 mt-1">
                 <strong>Personalization tips:</strong>
                 <ul className="list-disc list-inside mt-1 space-y-1">
                   <li>Use <code className="bg-purple-100 px-1 rounded">{'{name}'}</code> to insert the guest's name</li>
                   <li>Use <code className="bg-purple-100 px-1 rounded">{'{website_url}'}</code> to insert your website link</li>
-                  <li>Couple names will automatically replace any mentions of "Liam & Mia"</li>
+                  <li>Use <code className="bg-purple-100 px-1 rounded">{'{couple_names}'}</code> to insert the couple's names</li>
                 </ul>
               </div>
             </div>

@@ -8,52 +8,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Calendar, MapPin, Heart, Image, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useHomePageData } from '@/hooks/useHomePageData';
 
 const HomeManagement: React.FC = () => {
   const { toast } = useToast();
-
-  // Default values from the current home page
-  const [backgroundImage, setBackgroundImage] = useState("https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80");
-  const [coupleNames, setCoupleNames] = useState("Liam & Mia");
-  const [weddingDate, setWeddingDate] = useState("October 25th, 2025");
-  const [ceremonyTime, setCeremonyTime] = useState("3:00 PM");
-  const [venueName, setVenueName] = useState("The Enchanted Gardens");
-  const [venueAddress, setVenueAddress] = useState("123 Dreamy Lane, Wonderland");
-  
-  // Love story sections
-  const [firstSpark, setFirstSpark] = useState("It all began on a crisp autumn evening, under a sky full of stars. We met at a small, cozy bookstore cafe, drawn together by a shared love for classic literature and strong coffee. What started as a simple conversation about our favorite authors soon blossomed into something much more profound. We talked for hours, lost in our own world, oblivious to the time passing by.");
-  const [adventures, setAdventures] = useState("From that day forward, our lives became an exciting adventure. We explored hidden city gems, hiked through breathtaking landscapes, and shared countless laugh-filled dinners. Each moment, whether big or small, wove another thread into the beautiful tapestry of our relationship. We discovered not just a partner in each other, but a best friend, a confidant, and a soulmate.");
-  const [proposal, setProposal] = useState("On a serene beach, with the sun setting in a blaze of glory, painting the sky in hues of orange and purple, one of us got down on one knee. It was a moment suspended in time, filled with happy tears, heartfelt promises, and an overwhelming sense of joy. The answer was a resounding \"Yes!\" – a promise of forever.");
-  const [nextChapter, setNextChapter] = useState("Now, we stand on the cusp of our greatest adventure yet – marriage. We are so excited to celebrate our love with all of you, our cherished family and friends. Your presence will make our special day even more memorable as we embark on this beautiful journey together, hand in hand, heart to heart.");
-
+  const { data, updateData } = useHomePageData();
   const [isSaving, setIsSaving] = useState(false);
+
+  // Local state for form
+  const [formData, setFormData] = useState(data);
 
   const handleSave = async () => {
     setIsSaving(true);
     
     try {
-      // Store the data in localStorage for now (could be upgraded to database later)
-      const homePageData = {
-        backgroundImage,
-        coupleNames,
-        weddingDate,
-        ceremonyTime,
-        venueName,
-        venueAddress,
-        loveStory: {
-          firstSpark,
-          adventures,
-          proposal,
-          nextChapter
-        },
-        updatedAt: new Date().toISOString()
-      };
-      
-      localStorage.setItem('homePageData', JSON.stringify(homePageData));
+      updateData(formData);
       
       toast({
         title: "Settings Saved",
-        description: "Home page content has been updated successfully. Refresh the page to see changes.",
+        description: "Home page content has been updated successfully. Changes are now live!",
         duration: 5000,
       });
     } catch (error) {
@@ -95,8 +68,8 @@ const HomeManagement: React.FC = () => {
             <Label htmlFor="backgroundImage" className="text-purple-700">Background Image URL</Label>
             <Input
               id="backgroundImage"
-              value={backgroundImage}
-              onChange={(e) => setBackgroundImage(e.target.value)}
+              value={formData.backgroundImage}
+              onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
               placeholder="Enter image URL"
               className="border-purple-200 focus:border-purple-400"
             />
@@ -105,8 +78,8 @@ const HomeManagement: React.FC = () => {
             <Label htmlFor="coupleNames" className="text-purple-700">Couple Names</Label>
             <Input
               id="coupleNames"
-              value={coupleNames}
-              onChange={(e) => setCoupleNames(e.target.value)}
+              value={formData.coupleNames}
+              onChange={(e) => setFormData({ ...formData, coupleNames: e.target.value })}
               placeholder="e.g., John & Jane"
               className="border-purple-200 focus:border-purple-400"
             />
@@ -129,8 +102,8 @@ const HomeManagement: React.FC = () => {
               <Label htmlFor="weddingDate" className="text-purple-700">Wedding Date</Label>
               <Input
                 id="weddingDate"
-                value={weddingDate}
-                onChange={(e) => setWeddingDate(e.target.value)}
+                value={formData.weddingDate}
+                onChange={(e) => setFormData({ ...formData, weddingDate: e.target.value })}
                 placeholder="e.g., October 25th, 2025"
                 className="border-purple-200 focus:border-purple-400"
               />
@@ -139,8 +112,8 @@ const HomeManagement: React.FC = () => {
               <Label htmlFor="ceremonyTime" className="text-purple-700">Ceremony Time</Label>
               <Input
                 id="ceremonyTime"
-                value={ceremonyTime}
-                onChange={(e) => setCeremonyTime(e.target.value)}
+                value={formData.ceremonyTime}
+                onChange={(e) => setFormData({ ...formData, ceremonyTime: e.target.value })}
                 placeholder="e.g., 3:00 PM"
                 className="border-purple-200 focus:border-purple-400"
               />
@@ -156,8 +129,8 @@ const HomeManagement: React.FC = () => {
               <Label htmlFor="venueName" className="text-purple-700">Venue Name</Label>
               <Input
                 id="venueName"
-                value={venueName}
-                onChange={(e) => setVenueName(e.target.value)}
+                value={formData.venueName}
+                onChange={(e) => setFormData({ ...formData, venueName: e.target.value })}
                 placeholder="e.g., The Enchanted Gardens"
                 className="border-purple-200 focus:border-purple-400"
               />
@@ -166,8 +139,8 @@ const HomeManagement: React.FC = () => {
               <Label htmlFor="venueAddress" className="text-purple-700">Venue Address</Label>
               <Input
                 id="venueAddress"
-                value={venueAddress}
-                onChange={(e) => setVenueAddress(e.target.value)}
+                value={formData.venueAddress}
+                onChange={(e) => setFormData({ ...formData, venueAddress: e.target.value })}
                 placeholder="e.g., 123 Dreamy Lane, Wonderland"
                 className="border-purple-200 focus:border-purple-400"
               />
@@ -190,8 +163,11 @@ const HomeManagement: React.FC = () => {
             <Label htmlFor="firstSpark" className="text-purple-700 font-medium">The First Spark</Label>
             <Textarea
               id="firstSpark"
-              value={firstSpark}
-              onChange={(e) => setFirstSpark(e.target.value)}
+              value={formData.loveStory.firstSpark}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                loveStory: { ...formData.loveStory, firstSpark: e.target.value }
+              })}
               rows={4}
               className="border-purple-200 focus:border-purple-400 mt-2"
             />
@@ -200,8 +176,11 @@ const HomeManagement: React.FC = () => {
             <Label htmlFor="adventures" className="text-purple-700 font-medium">Adventures Together</Label>
             <Textarea
               id="adventures"
-              value={adventures}
-              onChange={(e) => setAdventures(e.target.value)}
+              value={formData.loveStory.adventures}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                loveStory: { ...formData.loveStory, adventures: e.target.value }
+              })}
               rows={4}
               className="border-purple-200 focus:border-purple-400 mt-2"
             />
@@ -210,8 +189,11 @@ const HomeManagement: React.FC = () => {
             <Label htmlFor="proposal" className="text-purple-700 font-medium">The Proposal</Label>
             <Textarea
               id="proposal"
-              value={proposal}
-              onChange={(e) => setProposal(e.target.value)}
+              value={formData.loveStory.proposal}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                loveStory: { ...formData.loveStory, proposal: e.target.value }
+              })}
               rows={4}
               className="border-purple-200 focus:border-purple-400 mt-2"
             />
@@ -220,8 +202,11 @@ const HomeManagement: React.FC = () => {
             <Label htmlFor="nextChapter" className="text-purple-700 font-medium">Our Next Chapter</Label>
             <Textarea
               id="nextChapter"
-              value={nextChapter}
-              onChange={(e) => setNextChapter(e.target.value)}
+              value={formData.loveStory.nextChapter}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                loveStory: { ...formData.loveStory, nextChapter: e.target.value }
+              })}
               rows={4}
               className="border-purple-200 focus:border-purple-400 mt-2"
             />

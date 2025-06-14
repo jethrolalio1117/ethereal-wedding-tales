@@ -5,11 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { LogOut, Users, Camera, Mail, Home, Flower2 } from 'lucide-react';
+import { LogOut, Users, Camera, Mail, Home, Flower2, MailCheck } from 'lucide-react';
 import GuestManagement from '@/components/admin/GuestManagement';
 import GalleryManagement from '@/components/admin/GalleryManagement';
 import EmailTools from '@/components/admin/EmailTools';
 import HomeManagement from '@/components/admin/HomeManagement';
+import RSVPManagement from '@/components/admin/RSVPManagement';
 
 const AdminPage: React.FC = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -24,14 +25,10 @@ const AdminPage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center relative overflow-hidden">
         {/* Floating floral elements */}
         <div className="absolute top-10 left-10 text-pink-300 opacity-30 animate-bounce">
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V9H21ZM9 6.5L3 7V9H9V6.5ZM12 8C14.2 8 16 9.8 16 12C16 14.2 14.2 16 12 16C9.8 16 8 14.2 8 12C8 9.8 9.8 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM9 16.5L3 17V19H9V16.5ZM21 17L15 16.5V19H21V17Z"/>
-          </svg>
+          <Flower2 size={60} className="animate-pulse" />
         </div>
         <div className="absolute bottom-20 right-20 text-purple-300 opacity-20 animate-pulse">
-          <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
-          </svg>
+          <Flower2 size={80} />
         </div>
         <div className="text-center">
           <Flower2 className="text-purple-500 mx-auto mb-4 animate-pulse" size={64} />
@@ -81,14 +78,10 @@ const AdminPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
       {/* Floating floral decorations */}
       <div className="absolute top-5 right-5 text-pink-300 opacity-20 animate-pulse">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
-        </svg>
+        <Flower2 size={40} />
       </div>
       <div className="absolute bottom-10 left-5 text-purple-300 opacity-15 animate-bounce">
-        <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V9H21ZM9 6.5L3 7V9H9V6.5ZM12 8C14.2 8 16 9.8 16 12C16 14.2 14.2 16 12 16C9.8 16 8 14.2 8 12C8 9.8 9.8 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM9 16.5L3 17V19H9V16.5ZM21 17L15 16.5V19H21V17Z"/>
-        </svg>
+        <Flower2 size={50} />
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -123,27 +116,35 @@ const AdminPage: React.FC = () => {
         </div>
 
         <Tabs defaultValue="home" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-white/70 border border-pink-200 shadow-lg">
+          <TabsList className="grid w-full grid-cols-5 bg-white/70 border border-pink-200 shadow-lg">
             <TabsTrigger value="home" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800">
               <Home className="mr-2" size={18} />
-              Home Management
+              Home
+            </TabsTrigger>
+            <TabsTrigger value="rsvp" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800">
+              <MailCheck className="mr-2" size={18} />
+              RSVP
             </TabsTrigger>
             <TabsTrigger value="guests" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800">
               <Users className="mr-2" size={18} />
-              Guest Management
+              Guests
             </TabsTrigger>
             <TabsTrigger value="gallery" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800">
               <Camera className="mr-2" size={18} />
-              Gallery Management
+              Gallery
             </TabsTrigger>
             <TabsTrigger value="email" className="data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800">
               <Mail className="mr-2" size={18} />
-              Email Tools
+              Email
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="home" className="mt-6">
             <HomeManagement />
+          </TabsContent>
+
+          <TabsContent value="rsvp" className="mt-6">
+            <RSVPManagement />
           </TabsContent>
 
           <TabsContent value="guests" className="mt-6">

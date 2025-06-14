@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { UserCheck, UserX, Users, Trash2, MessageSquare } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { UserCheck, UserX, Users, Trash2, MessageSquare, Flower2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Guest {
@@ -93,41 +94,49 @@ const GuestManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100 relative">
+        <div className="absolute top-4 right-4 text-pink-200 opacity-30">
+          <Flower2 size={40} />
+        </div>
         <div className="text-center py-8">Loading guests...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating floral decorations */}
+      <div className="absolute top-0 right-0 text-pink-200 opacity-20 animate-pulse">
+        <Flower2 size={60} />
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-purple-100 text-center">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-purple-100 text-center shadow-lg">
           <div className="text-2xl font-bold text-purple-800">{stats.total}</div>
           <div className="text-sm text-purple-600">Total RSVPs</div>
         </div>
-        <div className="bg-green-50/80 backdrop-blur-sm rounded-xl p-4 border border-green-200 text-center">
+        <div className="bg-green-50/80 backdrop-blur-sm rounded-xl p-4 border border-green-200 text-center shadow-lg">
           <div className="text-2xl font-bold text-green-800">{stats.confirmed}</div>
           <div className="text-sm text-green-600">Confirmed</div>
         </div>
-        <div className="bg-red-50/80 backdrop-blur-sm rounded-xl p-4 border border-red-200 text-center">
+        <div className="bg-red-50/80 backdrop-blur-sm rounded-xl p-4 border border-red-200 text-center shadow-lg">
           <div className="text-2xl font-bold text-red-800">{stats.declined}</div>
           <div className="text-sm text-red-600">Declined</div>
         </div>
-        <div className="bg-yellow-50/80 backdrop-blur-sm rounded-xl p-4 border border-yellow-200 text-center">
+        <div className="bg-yellow-50/80 backdrop-blur-sm rounded-xl p-4 border border-yellow-200 text-center shadow-lg">
           <div className="text-2xl font-bold text-yellow-800">{stats.pending}</div>
           <div className="text-sm text-yellow-600">Pending</div>
         </div>
-        <div className="bg-purple-50/80 backdrop-blur-sm rounded-xl p-4 border border-purple-200 text-center">
+        <div className="bg-purple-50/80 backdrop-blur-sm rounded-xl p-4 border border-purple-200 text-center shadow-lg">
           <div className="text-2xl font-bold text-purple-800">{stats.totalAttendees}</div>
           <div className="text-sm text-purple-600">Total Attendees</div>
         </div>
       </div>
 
       {/* Guests Table */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 overflow-hidden">
-        <div className="p-6 border-b border-purple-100">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 overflow-hidden shadow-xl">
+        <div className="p-6 border-b border-purple-100 bg-gradient-to-r from-pink-50 to-purple-50">
           <h3 className="text-xl font-playfair text-purple-800">Guest List</h3>
         </div>
         
@@ -185,14 +194,40 @@ const GuestManagement: React.FC = () => {
                   {new Date(guest.created_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    onClick={() => deleteGuest(guest.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                  >
-                    <Trash2 size={14} />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-white border-pink-200">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-pink-800 font-playfair flex items-center">
+                          <Trash2 className="mr-2 text-red-600" size={20} />
+                          Delete RSVP
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-purple-600">
+                          Are you sure you want to delete the RSVP from <strong>{guest.name}</strong> ({guest.email})? 
+                          This action cannot be undone and will permanently remove their response from your guest list.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-purple-300 text-purple-700">
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteGuest(guest.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          Delete RSVP
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))}
@@ -201,7 +236,8 @@ const GuestManagement: React.FC = () => {
 
         {guests.length === 0 && (
           <div className="text-center py-8 text-purple-600">
-            No RSVPs received yet
+            <Users className="mx-auto mb-4 opacity-50" size={48} />
+            <p>No RSVPs received yet</p>
           </div>
         )}
       </div>
