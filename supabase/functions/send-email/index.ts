@@ -12,6 +12,8 @@ interface EmailRequest {
   subject: string;
   message: string;
   recipientType: string;
+  coupleNames?: string;
+  websiteUrl?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -21,13 +23,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, subject, message, recipientType }: EmailRequest = await req.json();
+    const { to, subject, message, recipientType, coupleNames, websiteUrl }: EmailRequest = await req.json();
 
     console.log("Email sending request:", {
       to: to.length > 0 ? `${to.length} recipients` : 'No recipients',
       subject,
       message: message.substring(0, 100) + "...",
       recipientType,
+      coupleNames,
       timestamp: new Date().toISOString()
     });
 
@@ -65,23 +68,31 @@ const handler = async (req: Request): Promise<Response> => {
     const errors: string[] = [];
 
     // Send emails to all recipients
-    for (const email of to) {
+    for (const emailAddress of to) {
       try {
-        console.log(`Sending email to: ${email}`);
+        console.log(`Sending email to: ${emailAddress}`);
+        
+        // Extract name from email if no name is provided
+        const recipientName = emailAddress.split('@')[0];
+        
+        // Replace placeholders in the message
+        let personalizedMessage = message
+          .replace(/\{name\}/g, recipientName)
+          .replace(/\{website_url\}/g, websiteUrl || 'https://your-wedding-website.com');
         
         const emailResponse = await resend.emails.send({
-          from: 'Liam & Mia Wedding <noreply@resend.dev>',
-          to: [email],
+          from: `${coupleNames || 'Liam & Mia'} Wedding <noreply@resend.dev>`,
+          to: [emailAddress],
           subject,
-          html: message.replace(/\n/g, '<br>'),
+          html: personalizedMessage.replace(/\n/g, '<br>'),
         });
 
-        console.log(`Email sent successfully to ${email}:`, emailResponse);
+        console.log(`Email sent successfully to ${emailAddress}:`, emailResponse);
         successCount++;
       } catch (error: any) {
-        console.error(`Failed to send email to ${email}:`, error);
+        console.error(`Failed to send email to ${emailAddress}:`, error);
         errorCount++;
-        errors.push(`${email}: ${error.message}`);
+        errors.push(`${emailAddress}: ${error.message}`);
       }
     }
 

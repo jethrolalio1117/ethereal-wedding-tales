@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,10 +16,24 @@ const EmailTools: React.FC = () => {
   const [recipientType, setRecipientType] = useState<string>('');
   const [customEmail, setCustomEmail] = useState('');
   const [sending, setSending] = useState(false);
+  const [coupleNames, setCoupleNames] = useState('Liam & Mia');
+
+  // Load couple names from localStorage
+  useEffect(() => {
+    const storedData = localStorage.getItem('homePageData');
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        setCoupleNames(parsedData.coupleNames || 'Liam & Mia');
+      } catch (error) {
+        console.error('Error parsing stored home data:', error);
+      }
+    }
+  }, []);
 
   const emailTemplates = {
     reminder: {
-      subject: 'Gentle Reminder: Please RSVP for Liam & Mia\'s Wedding',
+      subject: `Gentle Reminder: Please RSVP for ${coupleNames}'s Wedding`,
       message: `Dear {name},
 
 We hope this message finds you well! We're reaching out with a gentle reminder about our upcoming wedding celebration.
@@ -30,10 +45,10 @@ You can RSVP easily through our wedding website: {website_url}
 If you have any questions or need assistance, please don't hesitate to reach out to us directly.
 
 With love and excitement,
-Liam & Mia ✨`
+${coupleNames} ✨`
     },
     thank_you: {
-      subject: 'Thank You for Your RSVP - Liam & Mia',
+      subject: `Thank You for Your RSVP - ${coupleNames}`,
       message: `Dear {name},
 
 Thank you so much for taking the time to RSVP to our wedding! We're thrilled that you'll be joining us on our special day.
@@ -43,10 +58,10 @@ We can't wait to celebrate with you and create beautiful memories together. If y
 Looking forward to seeing you soon!
 
 With love and gratitude,
-Liam & Mia 💕`
+${coupleNames} 💕`
     },
     save_the_date: {
-      subject: 'Save the Date: Liam & Mia\'s Wedding - October 25th, 2025',
+      subject: `Save the Date: ${coupleNames}'s Wedding - October 25th, 2025`,
       message: `Dear {name},
 
 We're excited to share some wonderful news with you! We're getting married and would love for you to be part of our special day.
@@ -61,7 +76,7 @@ A formal invitation with all the details will follow, but we wanted to give you 
 We can't wait to celebrate with you!
 
 With love,
-Liam & Mia ✨`
+${coupleNames} ✨`
     }
   };
 
@@ -88,8 +103,8 @@ Liam & Mia ✨`
     try {
       console.log('Attempting to send email with:', { recipientType, subject: subject.substring(0, 50) });
       
-      // Get recipient emails based on type
-      let recipients = [];
+      // Get recipient emails and names based on type
+      let recipients: string[] = [];
       
       if (recipientType === 'custom') {
         recipients = [customEmail];
@@ -134,13 +149,15 @@ Liam & Mia ✨`
 
       console.log(`Sending to ${recipients.length} recipients`);
 
-      // Call the edge function
+      // Call the edge function with updated parameters
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: {
           to: recipients,
           subject,
           message,
-          recipientType
+          recipientType,
+          coupleNames,
+          websiteUrl: window.location.origin
         }
       });
 
@@ -295,6 +312,7 @@ Liam & Mia ✨`
                 Email Preview
               </h4>
               <div className="text-sm space-y-2">
+                <div><strong>From:</strong> {coupleNames} Wedding</div>
                 <div><strong>To:</strong> {recipientType || 'Select recipients'}</div>
                 <div><strong>Subject:</strong> {subject || 'Enter subject'}</div>
                 <div className="bg-white rounded p-2 border">

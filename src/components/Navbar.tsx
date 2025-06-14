@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Sparkles, BookOpen, Image, Send } from 'lucide-react';
 
@@ -12,13 +12,36 @@ const navItems = [
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [coupleNames, setCoupleNames] = useState('L & M');
+
+  // Load couple names from localStorage and create logo
+  useEffect(() => {
+    const storedData = localStorage.getItem('homePageData');
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        if (parsedData.coupleNames) {
+          // Extract initials from couple names (e.g., "Liam & Mia" -> "L & M")
+          const names = parsedData.coupleNames.split(' & ');
+          if (names.length === 2) {
+            const initials = `${names[0].charAt(0)} & ${names[1].charAt(0)}`;
+            setCoupleNames(initials);
+          } else {
+            setCoupleNames(parsedData.coupleNames);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing stored home data:', error);
+      }
+    }
+  }, []);
 
   return (
     <nav className="bg-background/80 backdrop-blur-md shadow-md sticky top-0 z-50 animate-fade-in">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-3xl font-playfair font-bold text-primary hover:text-primary/80 transition-colors">
-            L & M
+            {coupleNames}
           </Link>
           <div className="hidden md:flex space-x-6">
             {navItems.map((item) => (
