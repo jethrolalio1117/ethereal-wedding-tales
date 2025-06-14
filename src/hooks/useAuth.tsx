@@ -40,11 +40,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const checkAdminStatus = async (userId: string) => {
     try {
       console.log('Checking admin status for user:', userId);
-      const { data: profile, error } = await supabase
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Admin check timeout')), 10000)
+      );
+      
+      const queryPromise = supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .maybeSingle();
+      
+      const { data: profile, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
       
       if (error) {
         console.error('Error fetching profile:', error);
@@ -62,22 +70,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     // Get initial session first
     const getInitialSession = async () => {
-      console.log('Getting initial session...');
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      console.log('Initial session:', initialSession?.user?.email);
-      
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      
-      if (initialSession?.user) {
-        await checkAdminStatus(initialSession.user.id);
-      } else {
-        setIsAdmin(false);
+      try {
+        console.log('Getting initial session...');
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('Initial session:', initialSession?.user?.email);
+        
+        if (mounted) {
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          
+          if (initialSession?.user) {
+            await checkAdminStatus(initialSession.user.id);
+          } else {
+            setIsAdmin(false);
+          }
+          
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+        if (mounted) {
+          setLoading(false);
+          setIsAdmin(false);
+        }
       }
-      
-      setLoading(false);
     };
 
     // Set up auth state listener
@@ -85,17 +105,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await checkAdminStatus(session.user.id);
-        } else {
-          setIsAdmin(false);
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            await checkAdminStatus(session.user.id);
+          } else {
+            setIsAdmin(false);
+          }
+          
+          setLoading(false);
         }
-        
-        // Only set loading to false after we've processed everything
-        setLoading(false);
       }
     );
 
@@ -103,6 +124,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     getInitialSession();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);

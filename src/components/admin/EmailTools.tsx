@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Mail, Send, Users, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const EmailTools: React.FC = () => {
   const [emailType, setEmailType] = useState<string>('');
@@ -86,13 +87,73 @@ Liam & Mia ✨`
     setSending(true);
 
     try {
-      // Here you would typically call your edge function for sending emails
-      // For now, we'll simulate the email sending
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Attempting to send email with:', { recipientType, subject: subject.substring(0, 50) });
+      
+      // Get recipient emails based on type
+      let recipients = [];
+      
+      if (recipientType === 'custom') {
+        recipients = [customEmail];
+      } else {
+        // Fetch guests from database based on recipient type
+        let query = supabase.from('guests').select('email, name');
+        
+        switch (recipientType) {
+          case 'confirmed':
+            query = query.eq('attending', true);
+            break;
+          case 'declined':
+            query = query.eq('attending', false);
+            break;
+          case 'pending':
+            query = query.is('attending', null);
+            break;
+          case 'all':
+          default:
+            // No filter for all guests
+            break;
+        }
+        
+        const { data: guests, error } = await query;
+        
+        if (error) {
+          throw new Error(`Failed to fetch guests: ${error.message}`);
+        }
+        
+        recipients = guests?.map(guest => guest.email) || [];
+      }
+
+      if (recipients.length === 0) {
+        toast({
+          title: "No Recipients",
+          description: "No email addresses found for the selected recipient type.",
+          variant: "destructive",
+        });
+        setSending(false);
+        return;
+      }
+
+      console.log(`Sending to ${recipients.length} recipients`);
+
+      // Call the edge function
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: recipients,
+          subject,
+          message,
+          recipientType
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Email sending response:', data);
 
       toast({
         title: "Emails Sent Successfully!",
-        description: `Your ${emailType || 'custom'} email has been sent.`,
+        description: `Your ${emailType || 'custom'} email has been sent to ${recipients.length} recipient(s).`,
       });
 
       // Reset form
@@ -102,9 +163,10 @@ Liam & Mia ✨`
       setRecipientType('');
       setCustomEmail('');
     } catch (error: any) {
+      console.error('Email sending error:', error);
       toast({
         title: "Error",
-        description: "Failed to send emails. Please try again.",
+        description: error.message || "Failed to send emails. Please try again.",
         variant: "destructive",
       });
     } finally {
