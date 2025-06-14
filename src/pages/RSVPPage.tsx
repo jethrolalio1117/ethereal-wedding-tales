@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
 import { MailCheck, Send, User, Users, MessageSquare, Utensils } from 'lucide-react';
-import { Button } from '@/components/ui/button'; // Assuming shadcn button is available
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast";
-
+import { supabase } from '@/integrations/supabase/client';
 
 const RSVPPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -18,8 +18,9 @@ const RSVPPage: React.FC = () => {
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!name || !email || !attending) {
       toast({
         title: "Missing Information",
@@ -30,23 +31,42 @@ const RSVPPage: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    console.log({ name, email, attending, guests, dietary, message });
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const { error } = await supabase
+        .from('guests')
+        .insert({
+          name,
+          email,
+          attending: attending === 'yes',
+          guest_count: parseInt(guests),
+          dietary_restrictions: dietary || null,
+          message: message || null
+        });
+
+      if (error) throw error;
+
       toast({
         title: "RSVP Received!",
         description: "Thank you for your response. We can't wait to celebrate with you!",
       });
-      // Reset form (optional)
+
+      // Reset form
       setName('');
       setEmail('');
       setAttending(undefined);
       setGuests('1');
       setDietary('');
       setMessage('');
-    }, 1500);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to submit RSVP. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -160,7 +180,7 @@ const RSVPPage: React.FC = () => {
           </div>
         </form>
          <p className="text-xs text-center text-muted-foreground mt-8">
-          For full RSVP management and data storage, this form would typically connect to a backend database. Consider using the Supabase integration for this!
+          Your RSVP will be securely stored and managed through our admin dashboard.
         </p>
       </div>
     </div>

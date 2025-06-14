@@ -4,32 +4,43 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./hooks/useAuth";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import StoryPage from "./pages/StoryPage";
 import GalleryPage from "./pages/GalleryPage";
 import RSVPPage from "./pages/RSVPPage";
+import AuthPage from "./pages/AuthPage";
+import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Layout>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/story" element={<StoryPage />} />
-            <Route path="/gallery" element={<GalleryPage />} />
-            <Route path="/rsvp" element={<RSVPPage />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="*" element={
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/story" element={<StoryPage />} />
+                  <Route path="/gallery" element={<GalleryPage />} />
+                  <Route path="/rsvp" element={<RSVPPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            } />
           </Routes>
-        </Layout>
-      </BrowserRouter>
-    </TooltipProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

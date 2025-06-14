@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -8,7 +9,12 @@ const Footer: React.FC = () => {
       <div className="container mx-auto text-center text-muted-foreground">
         <p className="font-playfair text-lg">With Love, L & M</p>
         <p className="text-sm">&copy; {currentYear} | Forever & Always</p>
-        <p className="text-xs mt-2">Designed with Lovable.dev</p>
+        <div className="flex justify-center space-x-4 mt-4">
+          <p className="text-xs">Designed with Lovable.dev</p>
+          <Link to="/auth" className="text-xs hover:text-primary underline">
+            Admin
+          </Link>
+        </div>
       </div>
     </footer>
   );
