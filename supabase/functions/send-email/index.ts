@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,33 +57,51 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Here you would integrate with Resend when the API key is configured
-    // Example Resend integration:
-    /*
+    // Initialize Resend with the API key
     const resend = new Resend(resendApiKey);
     
-    for (const email of to) {
-      await resend.emails.send({
-        from: 'Your Wedding <noreply@yourdomain.com>',
-        to: [email],
-        subject,
-        html: message.replace(/\n/g, '<br>'),
-      });
-    }
-    */
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
 
-    // For now, simulate successful sending
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Send emails to all recipients
+    for (const email of to) {
+      try {
+        console.log(`Sending email to: ${email}`);
+        
+        const emailResponse = await resend.emails.send({
+          from: 'Liam & Mia Wedding <noreply@resend.dev>',
+          to: [email],
+          subject,
+          html: message.replace(/\n/g, '<br>'),
+        });
+
+        console.log(`Email sent successfully to ${email}:`, emailResponse);
+        successCount++;
+      } catch (error: any) {
+        console.error(`Failed to send email to ${email}:`, error);
+        errorCount++;
+        errors.push(`${email}: ${error.message}`);
+      }
+    }
+
+    const allSuccessful = errorCount === 0;
+    const statusCode = allSuccessful ? 200 : 207; // 207 = Multi-Status for partial success
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        message: "Emails sent successfully (production mode would be active with Resend API key)",
+        success: allSuccessful,
+        message: allSuccessful 
+          ? `All emails sent successfully to ${successCount} recipient(s)`
+          : `${successCount} emails sent successfully, ${errorCount} failed`,
         recipientCount: to.length,
-        actualEmailsSent: false // Set to true when Resend is actually integrated
+        successCount,
+        errorCount,
+        errors: errors.length > 0 ? errors : undefined,
+        actualEmailsSent: true
       }),
       {
-        status: 200,
+        status: statusCode,
         headers: {
           "Content-Type": "application/json",
           ...corsHeaders,

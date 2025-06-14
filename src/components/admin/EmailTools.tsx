@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -152,26 +151,39 @@ Liam & Mia ✨`
 
       console.log('Email sending response:', data);
 
-      // Check if this is the demo implementation
-      if (data?.message?.includes('demo') || !data?.actualEmailsSent) {
+      // Handle the response based on whether emails were actually sent
+      if (data?.actualEmailsSent) {
+        if (data.success) {
+          toast({
+            title: "Emails Sent Successfully!",
+            description: `Your ${emailType || 'custom'} email has been sent to ${data.successCount} recipient(s).`,
+          });
+        } else {
+          toast({
+            title: "Partial Success",
+            description: `${data.successCount} emails sent successfully, but ${data.errorCount} failed. Check the console for details.`,
+            variant: "destructive",
+          });
+          if (data.errors) {
+            console.error('Email sending errors:', data.errors);
+          }
+        }
+      } else {
         toast({
           title: "Demo Mode - Emails Not Actually Sent",
           description: `This is a demo implementation. ${recipients.length} email(s) would be sent in production. To send real emails, you need to configure the Resend API key.`,
           variant: "destructive",
         });
-      } else {
-        toast({
-          title: "Emails Sent Successfully!",
-          description: `Your ${emailType || 'custom'} email has been sent to ${recipients.length} recipient(s).`,
-        });
       }
 
-      // Reset form
-      setEmailType('');
-      setSubject('');
-      setMessage('');
-      setRecipientType('');
-      setCustomEmail('');
+      // Reset form on success
+      if (data?.success) {
+        setEmailType('');
+        setSubject('');
+        setMessage('');
+        setRecipientType('');
+        setCustomEmail('');
+      }
     } catch (error: any) {
       console.error('Email sending error:', error);
       toast({
@@ -312,11 +324,11 @@ Liam & Mia ✨`
               )}
             </Button>
 
-            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
               <div className="flex items-start">
-                <AlertTriangle className="text-amber-600 mr-2 mt-0.5" size={16} />
-                <div className="text-sm text-amber-800">
-                  <strong>Email Setup Required:</strong> To send real emails, you need to configure the Resend API key in your Supabase Edge Functions. Currently running in demo mode.
+                <CheckCircle className="text-green-600 mr-2 mt-0.5" size={16} />
+                <div className="text-sm text-green-800">
+                  <strong>Email Setup Complete:</strong> Your Resend API key is configured and emails will be sent to your guests.
                 </div>
               </div>
             </div>
