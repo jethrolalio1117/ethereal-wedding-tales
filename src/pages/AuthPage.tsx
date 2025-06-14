@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { LogIn, UserPlus, Flower2 } from 'lucide-react';
 
-// NEW: Google Icon SVG
+// Google Icon SVG
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} viewBox="0 0 48 48" width={20} height={20} fill="none">
     <g>
@@ -32,17 +32,11 @@ const AuthPage: React.FC = () => {
 
   console.log('AuthPage render - authLoading:', authLoading, 'user:', user?.email, 'isAdmin:', isAdmin);
 
-  // Redirect authenticated users
+  // Redirect authenticated admin users immediately
   useEffect(() => {
-    if (!authLoading && user) {
-      console.log('User authenticated, checking admin status...');
-      if (isAdmin) {
-        console.log('User is admin, redirecting to admin panel');
-        navigate('/admin');
-      } else {
-        console.log('User is not admin, staying on auth page');
-        // Don't redirect non-admin users, let them see they need admin access
-      }
+    if (!authLoading && user && isAdmin) {
+      console.log('Admin user detected, redirecting to admin panel');
+      navigate('/admin', { replace: true });
     }
   }, [user, authLoading, isAdmin, navigate]);
 
@@ -139,7 +133,6 @@ const AuthPage: React.FC = () => {
                 </Button>
                 <Button onClick={async () => {
                   await supabase.auth.signOut();
-                  window.location.reload();
                 }} variant="ghost" className="text-purple-600 w-full">
                   Sign Out & Try Different Account
                 </Button>
@@ -221,7 +214,6 @@ const AuthPage: React.FC = () => {
             </Button>
           </form>
 
-          {/* Google Sign-In Button */}
           {!isSignUp && (
             <div className="mt-6">
               <Button

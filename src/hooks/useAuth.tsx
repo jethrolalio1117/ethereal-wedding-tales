@@ -49,7 +49,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       if (error) {
         console.error('Error fetching profile:', error);
-        // If no profile exists, assume non-admin for now
         setIsAdmin(false);
       } else {
         console.log('Profile data:', profile);
@@ -70,7 +69,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       try {
         console.log('Initializing auth...');
         
-        // Get initial session
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -100,7 +98,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     };
 
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
@@ -110,19 +107,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setUser(session?.user ?? null);
           
           if (session?.user) {
-            await checkAdminStatus(session.user.id);
+            // Use setTimeout to prevent infinite loops
+            setTimeout(() => {
+              checkAdminStatus(session.user.id);
+            }, 0);
           } else {
             setIsAdmin(false);
           }
           
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Only set loading to false after we've processed the auth state change
+          if (event === 'SIGNED_OUT' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
             setLoading(false);
           }
         }
       }
     );
 
-    // Initialize auth
     initializeAuth();
 
     return () => {
@@ -132,8 +132,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const signOut = async () => {
+    setLoading(true);
     await supabase.auth.signOut();
     setIsAdmin(false);
+    setLoading(false);
   };
 
   return (
