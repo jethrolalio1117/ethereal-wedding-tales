@@ -80,7 +80,9 @@ const handler = async (req: Request): Promise<Response> => {
         // Replace placeholders in the message
         let personalizedMessage = message
           .replace(/\{name\}/g, recipientName)
-          .replace(/\{website_url\}/g, websiteUrl || window.location?.origin || 'your-wedding-website.com');
+          .replace(/\{website_url\}/g, websiteUrl || 'your-wedding-website.com')
+          .replace(/liam-mia-wedding\.lovable\.app/g, websiteUrl || 'your-wedding-website.com')
+          .replace(/Liam & Mia/g, coupleNames || 'Wedding Couple');
         
         const emailResponse = await resend.emails.send({
           from: `${coupleNames || 'Wedding Couple'} <noreply@resend.dev>`,

@@ -1,223 +1,159 @@
 
 import React, { useState, useEffect } from 'react';
+import { Mail, Send, Users, UserCheck, UserX, AlertCircle, Heart, Flower2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Send, Users, CheckCircle, AlertTriangle } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+interface Guest {
+  id: string;
+  name: string;
+  email: string;
+  attending?: boolean;
+  guest_count?: number;
+}
+
 const EmailTools: React.FC = () => {
-  const [emailType, setEmailType] = useState<string>('');
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [recipientType, setRecipientType] = useState<string>('all');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
-  const [recipientType, setRecipientType] = useState<string>('');
-  const [customEmail, setCustomEmail] = useState('');
-  const [sending, setSending] = useState(false);
-  const [coupleNames, setCoupleNames] = useState('Liam & Mia');
+  const [coupleNames, setCoupleNames] = useState('Wedding Couple');
+  const { toast } = useToast();
 
-  // Load couple names from localStorage
   useEffect(() => {
-    const storedData = localStorage.getItem('homePageData');
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData);
-        setCoupleNames(parsedData.coupleNames || 'Liam & Mia');
-      } catch (error) {
-        console.error('Error parsing stored home data:', error);
-      }
-    }
+    fetchGuests();
+    extractCoupleNames();
   }, []);
 
-  const emailTemplates = {
-    reminder: {
-      subject: `Gentle Reminder: Please RSVP for ${coupleNames}'s Wedding`,
-      message: `Dear {name},
-
-We hope this message finds you well! We're reaching out with a gentle reminder about our upcoming wedding celebration.
-
-We would be absolutely delighted to have you join us on our special day, but we haven't received your RSVP yet. To help us with our planning, could you please let us know if you'll be able to attend?
-
-You can RSVP easily through our wedding website: {website_url}
-
-If you have any questions or need assistance, please don't hesitate to reach out to us directly.
-
-With love and excitement,
-${coupleNames} ✨`
-    },
-    thank_you: {
-      subject: `Thank You for Your RSVP - ${coupleNames}`,
-      message: `Dear {name},
-
-Thank you so much for taking the time to RSVP to our wedding! We're thrilled that you'll be joining us on our special day.
-
-We can't wait to celebrate with you and create beautiful memories together. If you have any questions as the date approaches, please feel free to reach out.
-
-Looking forward to seeing you soon!
-
-With love and gratitude,
-${coupleNames} 💕`
-    },
-    save_the_date: {
-      subject: `Save the Date: ${coupleNames}'s Wedding - October 25th, 2025`,
-      message: `Dear {name},
-
-We're excited to share some wonderful news with you! We're getting married and would love for you to be part of our special day.
-
-Please save the date:
-📅 Saturday, October 25th, 2025
-🕒 3:00 PM Ceremony
-📍 The Enchanted Gardens, 123 Dreamy Lane, Wonderland
-
-A formal invitation with all the details will follow, but we wanted to give you plenty of time to mark your calendars.
-
-We can't wait to celebrate with you!
-
-With love,
-${coupleNames} ✨`
+  const extractCoupleNames = () => {
+    // Try to get couple names from the hero section
+    try {
+      const heroElement = document.querySelector('h1');
+      if (heroElement && heroElement.textContent) {
+        const heroText = heroElement.textContent.trim();
+        if (heroText.includes('&') || heroText.includes('and')) {
+          setCoupleNames(heroText);
+        }
+      }
+    } catch (error) {
+      console.log('Could not extract couple names from hero section');
     }
   };
 
-  const handleTemplateSelect = (templateKey: string) => {
-    const template = emailTemplates[templateKey as keyof typeof emailTemplates];
-    if (template) {
-      setSubject(template.subject);
-      setMessage(template.message);
-    }
-  };
+  const fetchGuests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('guests')
+        .select('*')
+        .order('name');
 
-  const sendEmail = async () => {
-    if (!subject || !message || (!recipientType && !customEmail)) {
+      if (error) throw error;
+      setGuests(data || []);
+    } catch (error) {
+      console.error('Error fetching guests:', error);
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
+        title: "Error",
+        description: "Failed to fetch guests",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFilteredGuests = (): Guest[] => {
+    switch (recipientType) {
+      case 'confirmed':
+        return guests.filter(guest => guest.attending === true);
+      case 'declined':
+        return guests.filter(guest => guest.attending === false);
+      case 'pending':
+        return guests.filter(guest => guest.attending === null || guest.attending === undefined);
+      default:
+        return guests;
+    }
+  };
+
+  const handleSendEmails = async () => {
+    if (!subject.trim() || !message.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please provide both subject and message",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const recipientGuests = getFilteredGuests();
+    
+    if (recipientGuests.length === 0) {
+      toast({
+        title: "No recipients",
+        description: "No guests match the selected criteria",
         variant: "destructive",
       });
       return;
     }
 
     setSending(true);
-
     try {
-      console.log('Attempting to send email with:', { recipientType, subject: subject.substring(0, 50) });
-      
-      // Get recipient emails and names based on type
-      let recipients: string[] = [];
-      let guestNames: { [email: string]: string } = {};
-      
-      if (recipientType === 'custom') {
-        recipients = [customEmail];
-      } else {
-        // Fetch guests from database based on recipient type
-        let query = supabase.from('guests').select('email, name, attending');
-        
-        const { data: guests, error } = await query;
-        
-        if (error) {
-          throw new Error(`Failed to fetch guests: ${error.message}`);
-        }
-        
-        // Filter guests based on recipient type
-        const filteredGuests = guests?.filter(guest => {
-          if (!guest.email) return false;
-          
-          switch (recipientType) {
-            case 'confirmed':
-              return guest.attending === true;
-            case 'declined':
-              return guest.attending === false;
-            case 'pending':
-              return guest.attending === null || guest.attending === undefined;
-            case 'all':
-            default:
-              return true;
-          }
-        }) || [];
+      // Prepare recipient emails and names
+      const recipientEmails = recipientGuests.map(guest => guest.email);
+      const guestNames = recipientGuests.reduce((acc, guest) => {
+        acc[guest.email] = guest.name;
+        return acc;
+      }, {} as { [email: string]: string });
 
-        console.log('Filtered guests:', filteredGuests.map(g => ({ email: g.email, name: g.name, attending: g.attending })));
-        
-        recipients = filteredGuests.map(guest => guest.email);
-        
-        // Create guest names mapping
-        filteredGuests.forEach(guest => {
-          if (guest.email && guest.name) {
-            guestNames[guest.email] = guest.name;
-          }
-        });
-      }
+      const websiteUrl = window.location.origin;
 
-      if (recipients.length === 0) {
-        toast({
-          title: "No Recipients",
-          description: "No email addresses found for the selected recipient type.",
-          variant: "destructive",
-        });
-        setSending(false);
-        return;
-      }
-
-      console.log(`Sending to ${recipients.length} recipients with names:`, guestNames);
-
-      // Call the edge function with updated parameters
-      const { data, error } = await supabase.functions.invoke('send-email', {
+      const response = await supabase.functions.invoke('send-email', {
         body: {
-          to: recipients,
+          to: recipientEmails,
           subject,
           message,
           recipientType,
           coupleNames,
-          websiteUrl: window.location.origin,
-          guestNames
-        }
+          websiteUrl,
+          guestNames,
+        },
       });
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw error;
+      if (response.error) {
+        throw response.error;
       }
 
-      console.log('Email sending response:', data);
-
-      // Handle the response based on whether emails were actually sent
-      if (data?.actualEmailsSent) {
-        if (data.success) {
-          toast({
-            title: "Emails Sent Successfully!",
-            description: `Your ${emailType || 'custom'} email has been sent to ${data.successCount} recipient(s).`,
-          });
-        } else {
-          toast({
-            title: "Partial Success",
-            description: `${data.successCount} emails sent successfully, but ${data.errorCount} failed. Check the console for details.`,
-            variant: "destructive",
-          });
-          if (data.errors) {
-            console.error('Email sending errors:', data.errors);
-          }
-        }
+      const result = response.data;
+      
+      if (result.success) {
+        toast({
+          title: "Success!",
+          description: result.message,
+        });
+        
+        // Clear form
+        setSubject('');
+        setMessage('');
       } else {
         toast({
-          title: "Demo Mode - Emails Not Actually Sent",
-          description: `This is a demo implementation. ${recipients.length} email(s) would be sent in production. To send real emails, you need to configure the Resend API key.`,
+          title: "Partial Success",
+          description: result.message,
           variant: "destructive",
         });
       }
-
-      // Reset form on success
-      if (data?.success) {
-        setEmailType('');
-        setSubject('');
-        setMessage('');
-        setRecipientType('');
-        setCustomEmail('');
-      }
-    } catch (error: any) {
-      console.error('Email sending error:', error);
+    } catch (error) {
+      console.error('Error sending emails:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to send emails. Please try again.",
+        description: "Failed to send emails",
         variant: "destructive",
       });
     } finally {
@@ -225,158 +161,183 @@ ${coupleNames} ✨`
     }
   };
 
+  const getRecipientTypeLabel = (type: string): string => {
+    switch (type) {
+      case 'confirmed': return 'Confirmed Guests';
+      case 'declined': return 'Declined Guests';
+      case 'pending': return 'Pending RSVPs';
+      default: return 'All Guests';
+    }
+  };
+
+  const filteredGuests = getFilteredGuests();
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <Mail className="text-primary mx-auto mb-4 animate-pulse" size={48} />
+        <p className="text-purple-600">Loading email tools...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border border-pink-200 shadow-lg relative overflow-hidden">
-        {/* Floral decorations */}
-        <div className="absolute top-2 right-2 text-pink-300 opacity-50">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V9H21ZM9 6.5L3 7V9H9V6.5ZM12 8C14.2 8 16 9.8 16 12C16 14.2 14.2 16 12 16C9.8 16 8 14.2 8 12C8 9.8 9.8 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM9 16.5L3 17V19H9V16.5ZM21 17L15 16.5V19H21V17Z"/>
-          </svg>
-        </div>
-        <div className="absolute bottom-2 left-2 text-purple-300 opacity-30">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
-          </svg>
-        </div>
+    <div className="space-y-8 relative">
+      {/* Floating floral decorations */}
+      <div className="absolute top-0 right-0 text-pink-200 opacity-20 animate-pulse">
+        <Flower2 size={60} />
+      </div>
+      <div className="absolute bottom-0 left-0 text-purple-200 opacity-15 animate-bounce">
+        <Heart size={40} />
+      </div>
 
-        <div className="flex items-center mb-6">
-          <Mail className="text-pink-600 mr-3" size={24} />
-          <h3 className="text-xl font-playfair text-pink-800">Email Tools</h3>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Email Composition */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="emailType">Email Template</Label>
-              <Select
-                value={emailType}
-                onValueChange={(value) => {
-                  setEmailType(value);
-                  handleTemplateSelect(value);
-                }}
-              >
-                <SelectTrigger className="border-pink-200 focus:border-pink-400">
-                  <SelectValue placeholder="Choose a template or create custom" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="reminder">RSVP Reminder</SelectItem>
-                  <SelectItem value="thank_you">Thank You for RSVP</SelectItem>
-                  <SelectItem value="save_the_date">Save the Date</SelectItem>
-                  <SelectItem value="custom">Custom Email</SelectItem>
-                </SelectContent>
-              </Select>
+      <Card className="bg-white/90 backdrop-blur-sm border-pink-200 shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-pink-50 to-purple-50 border-b border-pink-200">
+          <CardTitle className="flex items-center gap-2 text-pink-800 font-playfair">
+            <Mail className="text-pink-600" />
+            Email Communication Center
+          </CardTitle>
+          <p className="text-sm text-purple-600">Send personalized emails to your wedding guests</p>
+        </CardHeader>
+        <CardContent className="p-6 space-y-6">
+          {/* Guest Statistics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+              <Users className="mx-auto mb-2 text-blue-600" size={24} />
+              <div className="text-lg font-semibold text-blue-800">{guests.length}</div>
+              <div className="text-xs text-blue-600">Total Guests</div>
             </div>
-
-            <div>
-              <Label htmlFor="subject">Subject Line *</Label>
-              <Input
-                id="subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Enter email subject"
-                className="border-pink-200 focus:border-pink-400"
-              />
+            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+              <UserCheck className="mx-auto mb-2 text-green-600" size={24} />
+              <div className="text-lg font-semibold text-green-800">
+                {guests.filter(g => g.attending === true).length}
+              </div>
+              <div className="text-xs text-green-600">Confirmed</div>
             </div>
-
-            <div>
-              <Label htmlFor="message">Message *</Label>
-              <Textarea
-                id="message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Enter your message"
-                className="border-pink-200 focus:border-pink-400 min-h-[200px]"
-              />
-              <p className="text-xs text-pink-600 mt-1">
-                Use {'{name}'} for personalization and {'{website_url}'} for your website link
-              </p>
+            <div className="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
+              <UserX className="mx-auto mb-2 text-red-600" size={24} />
+              <div className="text-lg font-semibold text-red-800">
+                {guests.filter(g => g.attending === false).length}
+              </div>
+              <div className="text-xs text-red-600">Declined</div>
+            </div>
+            <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200">
+              <AlertCircle className="mx-auto mb-2 text-yellow-600" size={24} />
+              <div className="text-lg font-semibold text-yellow-800">
+                {guests.filter(g => g.attending === null || g.attending === undefined).length}
+              </div>
+              <div className="text-xs text-yellow-600">Pending</div>
             </div>
           </div>
 
-          {/* Recipients and Send */}
+          <Separator className="bg-pink-200" />
+
+          {/* Email Composition */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="recipients">Recipients</Label>
-              <Select
-                value={recipientType}
-                onValueChange={setRecipientType}
-              >
-                <SelectTrigger className="border-pink-200 focus:border-pink-400">
-                  <SelectValue placeholder="Select recipient group" />
+              <label className="block text-sm font-medium text-pink-700 mb-2">
+                Couple Names (for email personalization)
+              </label>
+              <Input
+                value={coupleNames}
+                onChange={(e) => setCoupleNames(e.target.value)}
+                placeholder="e.g., John & Jane"
+                className="border-pink-300 focus:border-pink-500 focus:ring-pink-200"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-pink-700 mb-2">
+                Send to
+              </label>
+              <Select value={recipientType} onValueChange={setRecipientType}>
+                <SelectTrigger className="border-pink-300 focus:border-pink-500 focus:ring-pink-200">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Guests</SelectItem>
-                  <SelectItem value="confirmed">Confirmed Attendees</SelectItem>
-                  <SelectItem value="declined">Declined Guests</SelectItem>
-                  <SelectItem value="pending">Pending RSVPs</SelectItem>
-                  <SelectItem value="custom">Custom Email</SelectItem>
+                  <SelectItem value="all">All Guests ({guests.length})</SelectItem>
+                  <SelectItem value="confirmed">
+                    Confirmed Guests ({guests.filter(g => g.attending === true).length})
+                  </SelectItem>
+                  <SelectItem value="declined">
+                    Declined Guests ({guests.filter(g => g.attending === false).length})
+                  </SelectItem>
+                  <SelectItem value="pending">
+                    Pending RSVPs ({guests.filter(g => g.attending === null || g.attending === undefined).length})
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {recipientType === 'custom' && (
-              <div>
-                <Label htmlFor="customEmail">Custom Email Address</Label>
-                <Input
-                  id="customEmail"
-                  type="email"
-                  value={customEmail}
-                  onChange={(e) => setCustomEmail(e.target.value)}
-                  placeholder="Enter email address"
-                  className="border-pink-200 focus:border-pink-400"
-                />
+            {/* Recipients Preview */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                  {getRecipientTypeLabel(recipientType)}
+                </Badge>
+                <span className="text-sm text-purple-600">
+                  {filteredGuests.length} recipient{filteredGuests.length !== 1 ? 's' : ''}
+                </span>
               </div>
-            )}
-
-            <div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
-              <h4 className="font-medium text-pink-800 mb-2 flex items-center">
-                <Users className="mr-2" size={16} />
-                Email Preview
-              </h4>
-              <div className="text-sm space-y-2">
-                <div><strong>From:</strong> {coupleNames} Wedding</div>
-                <div><strong>To:</strong> {recipientType || 'Select recipients'}</div>
-                <div><strong>Subject:</strong> {subject || 'Enter subject'}</div>
-                <div className="bg-white rounded p-2 border">
-                  <div className="text-xs text-gray-600 mb-1">Message Preview:</div>
-                  <div className="text-sm">
-                    {message ? message.substring(0, 150) + (message.length > 150 ? '...' : '') : 'Enter your message'}
-                  </div>
+              {filteredGuests.length > 0 && (
+                <div className="text-xs text-purple-600 max-h-20 overflow-y-auto">
+                  {filteredGuests.map(guest => guest.name).join(', ')}
                 </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-pink-700 mb-2">
+                Subject
+              </label>
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Email subject"
+                className="border-pink-300 focus:border-pink-500 focus:ring-pink-200"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-pink-700 mb-2">
+                Message
+              </label>
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Write your message here. Use {name} to personalize with guest names and {website_url} for your website link."
+                className="border-pink-300 focus:border-pink-500 focus:ring-pink-200 min-h-[120px]"
+              />
+              <div className="text-xs text-purple-600 mt-1">
+                <strong>Personalization tips:</strong>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li>Use <code className="bg-purple-100 px-1 rounded">{'{name}'}</code> to insert the guest's name</li>
+                  <li>Use <code className="bg-purple-100 px-1 rounded">{'{website_url}'}</code> to insert your website link</li>
+                  <li>Couple names will automatically replace any mentions of "Liam & Mia"</li>
+                </ul>
               </div>
             </div>
 
             <Button
-              onClick={sendEmail}
-              disabled={sending}
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+              onClick={handleSendEmails}
+              disabled={sending || !subject.trim() || !message.trim() || filteredGuests.length === 0}
+              className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg"
             >
               {sending ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Sending...
-                </div>
+                <>
+                  <Send className="mr-2 animate-spin" size={18} />
+                  Sending to {filteredGuests.length} guest{filteredGuests.length !== 1 ? 's' : ''}...
+                </>
               ) : (
                 <>
                   <Send className="mr-2" size={18} />
-                  Send Email
+                  Send Email to {filteredGuests.length} Guest{filteredGuests.length !== 1 ? 's' : ''}
                 </>
               )}
             </Button>
-
-            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-              <div className="flex items-start">
-                <CheckCircle className="text-green-600 mr-2 mt-0.5" size={16} />
-                <div className="text-sm text-green-800">
-                  <strong>Email Setup Complete:</strong> Your Resend API key is configured and emails will be sent to your guests.
-                </div>
-              </div>
-            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
