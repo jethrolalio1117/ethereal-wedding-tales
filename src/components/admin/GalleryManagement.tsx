@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Image, Upload, Trash2, Star, Plus, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -24,6 +25,7 @@ const GalleryManagement: React.FC = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [newImage, setNewImage] = useState({
     title: '',
     caption: '',
@@ -56,11 +58,70 @@ const GalleryManagement: React.FC = () => {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `gallery/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('gallery-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('gallery-images')
+        .getPublicUrl(filePath);
+
+      setNewImage({ ...newImage, image_url: publicUrl });
+
+      toast({
+        title: "Image Uploaded",
+        description: "Your image has been uploaded successfully",
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const addImage = async () => {
     if (!newImage.title || !newImage.image_url) {
       toast({
         title: "Missing Information",
-        description: "Please provide at least a title and image URL",
+        description: "Please provide at least a title and upload an image",
         variant: "destructive",
       });
       return;
@@ -146,7 +207,7 @@ const GalleryManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border border-pink-200">
         <div className="text-center py-8">Loading gallery...</div>
       </div>
     );
@@ -156,12 +217,12 @@ const GalleryManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-playfair text-purple-800">Gallery Management</h3>
-          <p className="text-purple-600">Manage your wedding photo gallery</p>
+          <h3 className="text-xl font-playfair text-pink-800">Gallery Management</h3>
+          <p className="text-pink-600">Manage your wedding photo gallery</p>
         </div>
         <Button 
           onClick={() => setIsAdding(!isAdding)}
-          className="bg-purple-600 hover:bg-purple-700"
+          className="bg-pink-600 hover:bg-pink-700"
         >
           <Plus className="mr-2" size={18} />
           Add New Image
@@ -170,9 +231,15 @@ const GalleryManagement: React.FC = () => {
 
       {/* Add New Image Form */}
       {isAdding && (
-        <Card className="border-purple-200">
+        <Card className="border-pink-200 bg-white/90 backdrop-blur-sm shadow-lg relative overflow-hidden">
+          {/* Floral decoration */}
+          <div className="absolute top-2 right-2 text-pink-300 opacity-30">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+            </svg>
+          </div>
           <CardHeader>
-            <CardTitle className="flex items-center text-purple-800">
+            <CardTitle className="flex items-center text-pink-800">
               <Upload className="mr-2 h-5 w-5" />
               Add New Image
             </CardTitle>
@@ -186,18 +253,25 @@ const GalleryManagement: React.FC = () => {
                   value={newImage.title}
                   onChange={(e) => setNewImage({ ...newImage, title: e.target.value })}
                   placeholder="Enter image title"
-                  className="border-purple-200"
+                  className="border-pink-200 focus:border-pink-400"
                 />
               </div>
               <div>
-                <Label htmlFor="image_url">Image URL *</Label>
+                <Label htmlFor="image_file">Upload Image *</Label>
                 <Input
-                  id="image_url"
-                  value={newImage.image_url}
-                  onChange={(e) => setNewImage({ ...newImage, image_url: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                  className="border-purple-200"
+                  id="image_file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  className="border-pink-200 focus:border-pink-400"
                 />
+                {uploading && (
+                  <p className="text-sm text-pink-600 mt-1">Uploading image...</p>
+                )}
+                {newImage.image_url && (
+                  <p className="text-sm text-green-600 mt-1">✓ Image uploaded successfully</p>
+                )}
               </div>
             </div>
             <div>
@@ -207,7 +281,7 @@ const GalleryManagement: React.FC = () => {
                 value={newImage.caption}
                 onChange={(e) => setNewImage({ ...newImage, caption: e.target.value })}
                 placeholder="Short caption for the image"
-                className="border-purple-200"
+                className="border-pink-200 focus:border-pink-400"
               />
             </div>
             <div>
@@ -217,7 +291,7 @@ const GalleryManagement: React.FC = () => {
                 value={newImage.description}
                 onChange={(e) => setNewImage({ ...newImage, description: e.target.value })}
                 placeholder="Detailed description (optional)"
-                className="border-purple-200"
+                className="border-pink-200 focus:border-pink-400"
                 rows={3}
               />
             </div>
@@ -227,16 +301,16 @@ const GalleryManagement: React.FC = () => {
                 id="is_featured"
                 checked={newImage.is_featured}
                 onChange={(e) => setNewImage({ ...newImage, is_featured: e.target.checked })}
-                className="rounded border-purple-300"
+                className="rounded border-pink-300"
               />
               <Label htmlFor="is_featured">Mark as featured image</Label>
             </div>
             <div className="flex space-x-2">
-              <Button onClick={addImage} className="bg-purple-600 hover:bg-purple-700">
+              <Button onClick={addImage} className="bg-pink-600 hover:bg-pink-700" disabled={uploading}>
                 <Save className="mr-2" size={18} />
                 Add Image
               </Button>
-              <Button onClick={() => setIsAdding(false)} variant="outline" className="border-purple-300">
+              <Button onClick={() => setIsAdding(false)} variant="outline" className="border-pink-300">
                 Cancel
               </Button>
             </div>
@@ -247,7 +321,7 @@ const GalleryManagement: React.FC = () => {
       {/* Gallery Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {images.map((image) => (
-          <Card key={image.id} className="border-purple-200 overflow-hidden">
+          <Card key={image.id} className="border-pink-200 overflow-hidden bg-white/90 backdrop-blur-sm shadow-lg">
             <div className="relative">
               <img
                 src={image.image_url}
@@ -266,9 +340,9 @@ const GalleryManagement: React.FC = () => {
               )}
             </div>
             <CardContent className="p-4">
-              <h4 className="font-medium text-purple-800 mb-2">{image.title}</h4>
+              <h4 className="font-medium text-pink-800 mb-2">{image.title}</h4>
               {image.caption && (
-                <p className="text-sm text-purple-600 mb-2">{image.caption}</p>
+                <p className="text-sm text-pink-600 mb-2">{image.caption}</p>
               )}
               {image.description && (
                 <p className="text-xs text-gray-600 mb-3 line-clamp-2">{image.description}</p>
@@ -278,19 +352,36 @@ const GalleryManagement: React.FC = () => {
                   onClick={() => toggleFeatured(image.id, image.is_featured)}
                   variant="outline"
                   size="sm"
-                  className="text-purple-600 border-purple-300"
+                  className="text-pink-600 border-pink-300 hover:bg-pink-50"
                 >
                   <Star className="mr-1" size={14} />
                   {image.is_featured ? 'Unfeature' : 'Feature'}
                 </Button>
-                <Button
-                  onClick={() => deleteImage(image.id)}
-                  variant="ghost"
-                  size="sm"
-                  className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                >
-                  <Trash2 size={14} />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete "{image.title}" from your gallery. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteImage(image.id)} className="bg-red-600 hover:bg-red-700">
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardContent>
           </Card>
@@ -298,7 +389,7 @@ const GalleryManagement: React.FC = () => {
       </div>
 
       {images.length === 0 && (
-        <div className="text-center py-8 text-purple-600">
+        <div className="text-center py-8 text-pink-600">
           <Image className="mx-auto mb-4" size={48} />
           <p>No images in gallery yet. Add some to get started!</p>
         </div>

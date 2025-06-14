@@ -14,6 +14,7 @@ interface EmailRequest {
   recipientType: string;
   coupleNames?: string;
   websiteUrl?: string;
+  guestNames?: { [email: string]: string };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -23,7 +24,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, subject, message, recipientType, coupleNames, websiteUrl }: EmailRequest = await req.json();
+    const { to, subject, message, recipientType, coupleNames, websiteUrl, guestNames }: EmailRequest = await req.json();
 
     console.log("Email sending request:", {
       to: to.length > 0 ? `${to.length} recipients` : 'No recipients',
@@ -31,6 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
       message: message.substring(0, 100) + "...",
       recipientType,
       coupleNames,
+      guestNames: guestNames ? Object.keys(guestNames).length + ' guest names provided' : 'No guest names',
       timestamp: new Date().toISOString()
     });
 
@@ -72,16 +74,16 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         console.log(`Sending email to: ${emailAddress}`);
         
-        // Extract name from email if no name is provided
-        const recipientName = emailAddress.split('@')[0];
+        // Get guest name from provided names or extract from email
+        const recipientName = guestNames?.[emailAddress] || emailAddress.split('@')[0];
         
         // Replace placeholders in the message
         let personalizedMessage = message
           .replace(/\{name\}/g, recipientName)
-          .replace(/\{website_url\}/g, websiteUrl || 'https://your-wedding-website.com');
+          .replace(/\{website_url\}/g, websiteUrl || window.location?.origin || 'your-wedding-website.com');
         
         const emailResponse = await resend.emails.send({
-          from: `${coupleNames || 'Liam & Mia'} Wedding <noreply@resend.dev>`,
+          from: `${coupleNames || 'Wedding Couple'} <noreply@resend.dev>`,
           to: [emailAddress],
           subject,
           html: personalizedMessage.replace(/\n/g, '<br>'),
