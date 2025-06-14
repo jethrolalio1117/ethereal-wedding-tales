@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { LogIn, UserPlus, Flower2 } from 'lucide-react';
 
 // NEW: Google Icon SVG
@@ -27,9 +28,15 @@ const AuthPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
 
-  // Remove direct redirect-to-admin check here!
-  // Handle all admin checks only in /admin page after successful authentication/session load
+  // Redirect authenticated users to admin page
+  useEffect(() => {
+    if (!authLoading && user) {
+      console.log('User is authenticated, redirecting to admin...');
+      navigate('/admin');
+    }
+  }, [user, authLoading, navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,13 +66,12 @@ const AuthPage: React.FC = () => {
           password,
         });
         if (error) throw error;
-        // Do NOT redirect or show Access Denied here, let /admin handle the check.
-        // All users can attempt login, admin enforcement is on the admin page only.
+        
+        // Don't manually navigate here - let the useEffect handle it
         toast({
           title: "Success",
-          description: "Signed in. Redirecting...",
+          description: "Signed in successfully!",
         });
-        navigate('/admin');
       }
     } catch (error: any) {
       toast({
@@ -95,8 +101,19 @@ const AuthPage: React.FC = () => {
       });
       setLoading(false);
     }
-    // Do NOT gate Google login here; allow redirect and let /admin handle permission.
   };
+
+  // Show loading while auth is being determined
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <Flower2 className="text-purple-500 mx-auto mb-4 animate-pulse" size={48} />
+          <p className="text-purple-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4">

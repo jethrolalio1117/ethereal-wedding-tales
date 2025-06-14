@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,14 +10,28 @@ import GalleryManagement from '@/components/admin/GalleryManagement';
 import EmailTools from '@/components/admin/EmailTools';
 
 const AdminPage: React.FC = () => {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
+  // Show loading while auth is being determined
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <Flower2 className="text-purple-500 mx-auto mb-4 animate-pulse" size={64} />
+          <p className="text-purple-600 text-lg">Loading admin panel...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to auth if not logged in
   if (!user) {
     navigate('/auth');
     return null;
   }
 
+  // Show access denied if not admin
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
@@ -25,9 +39,14 @@ const AdminPage: React.FC = () => {
           <Flower2 className="text-purple-500 mx-auto mb-4" size={64} />
           <h1 className="text-2xl font-playfair text-purple-800 mb-2">Access Denied</h1>
           <p className="text-purple-600 mb-4">You need admin privileges to access this page.</p>
-          <Button onClick={() => navigate('/')} variant="outline" className="border-purple-300 text-purple-700">
-            Return to Home
-          </Button>
+          <div className="space-y-2">
+            <Button onClick={() => navigate('/')} variant="outline" className="border-purple-300 text-purple-700 w-full">
+              Return to Home
+            </Button>
+            <Button onClick={() => signOut()} variant="ghost" className="text-purple-600 w-full">
+              Sign Out
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -45,6 +64,7 @@ const AdminPage: React.FC = () => {
           <div>
             <h1 className="text-4xl font-playfair text-purple-800 mb-2">Admin Dashboard</h1>
             <p className="text-purple-600">Manage your ethereal wedding website</p>
+            <p className="text-sm text-purple-500">Welcome, {user.email}</p>
           </div>
           <Button onClick={handleSignOut} variant="outline" className="border-purple-300 text-purple-700">
             <LogOut className="mr-2" size={18} />
