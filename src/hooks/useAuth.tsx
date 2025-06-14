@@ -37,50 +37,74 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const checkAdminStatus = async (userId: string) => {
+    try {
+      console.log('Checking admin status for user:', userId);
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        setIsAdmin(false);
+      } else {
+        console.log('Profile data:', profile);
+        const adminStatus = profile?.role === 'admin';
+        console.log('Is admin:', adminStatus);
+        setIsAdmin(adminStatus);
+      }
+    } catch (error) {
+      console.error('Error in admin check:', error);
+      setIsAdmin(false);
+    }
+  };
+
   useEffect(() => {
+    // Get initial session first
+    const getInitialSession = async () => {
+      console.log('Getting initial session...');
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
+      console.log('Initial session:', initialSession?.user?.email);
+      
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      
+      if (initialSession?.user) {
+        await checkAdminStatus(initialSession.user.id);
+      } else {
+        setIsAdmin(false);
+      }
+      
+      setLoading(false);
+    };
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Check if user is admin with better error handling
-          try {
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .maybeSingle();
-            
-            if (error) {
-              console.error('Error fetching profile:', error);
-              setIsAdmin(false);
-            } else {
-              console.log('Profile data:', profile);
-              setIsAdmin(profile?.role === 'admin');
-            }
-          } catch (error) {
-            console.error('Error in admin check:', error);
-            setIsAdmin(false);
-          }
+          await checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
         }
         
+        // Only set loading to false after we've processed everything
         setLoading(false);
       }
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    getInitialSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {

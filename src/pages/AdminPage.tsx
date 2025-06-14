@@ -13,8 +13,11 @@ const AdminPage: React.FC = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
+  console.log('AdminPage render - loading:', loading, 'user:', user?.email, 'isAdmin:', isAdmin);
+
   // Show loading while auth is being determined
   if (loading) {
+    console.log('Showing loading screen');
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
@@ -27,12 +30,14 @@ const AdminPage: React.FC = () => {
 
   // Redirect to auth if not logged in
   if (!user) {
+    console.log('No user, redirecting to auth');
     navigate('/auth');
     return null;
   }
 
   // Show access denied if not admin
   if (!isAdmin) {
+    console.log('User not admin, showing access denied');
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-100">
@@ -56,6 +61,8 @@ const AdminPage: React.FC = () => {
     await signOut();
     navigate('/');
   };
+
+  console.log('Rendering admin dashboard');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">

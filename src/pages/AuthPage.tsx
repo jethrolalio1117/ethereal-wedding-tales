@@ -28,15 +28,23 @@ const AuthPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
 
-  // Redirect authenticated users to admin page
+  console.log('AuthPage render - authLoading:', authLoading, 'user:', user?.email, 'isAdmin:', isAdmin);
+
+  // Redirect authenticated users
   useEffect(() => {
     if (!authLoading && user) {
-      console.log('User is authenticated, redirecting to admin...');
-      navigate('/admin');
+      console.log('User authenticated, checking admin status...');
+      if (isAdmin) {
+        console.log('User is admin, redirecting to admin panel');
+        navigate('/admin');
+      } else {
+        console.log('User is not admin, staying on auth page');
+        // Don't redirect non-admin users, let them see they need admin access
+      }
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, isAdmin, navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +75,6 @@ const AuthPage: React.FC = () => {
         });
         if (error) throw error;
         
-        // Don't manually navigate here - let the useEffect handle it
         toast({
           title: "Success",
           description: "Signed in successfully!",
@@ -105,11 +112,40 @@ const AuthPage: React.FC = () => {
 
   // Show loading while auth is being determined
   if (authLoading) {
+    console.log('Auth loading, showing spinner');
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <Flower2 className="text-purple-500 mx-auto mb-4 animate-pulse" size={48} />
           <p className="text-purple-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied message if user is logged in but not admin
+  if (user && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-purple-100">
+            <div className="text-center mb-8">
+              <Flower2 className="text-purple-500 mx-auto mb-4" size={48} strokeWidth={1.5} />
+              <h1 className="text-3xl font-playfair text-purple-800 mb-2">Access Denied</h1>
+              <p className="text-purple-600 text-sm mb-4">You are signed in as {user.email}, but you don't have admin privileges.</p>
+              <div className="space-y-2">
+                <Button onClick={() => navigate('/')} variant="outline" className="border-purple-300 text-purple-700 w-full">
+                  Return to Home
+                </Button>
+                <Button onClick={async () => {
+                  await supabase.auth.signOut();
+                  window.location.reload();
+                }} variant="ghost" className="text-purple-600 w-full">
+                  Sign Out & Try Different Account
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
