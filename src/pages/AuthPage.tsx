@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,8 +20,6 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const ADMIN_EMAIL = 'jethrolalio1117@gmail.com';
-
 const AuthPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -30,16 +28,8 @@ const AuthPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      // Check admin privilege after login
-      if (session?.user?.email === ADMIN_EMAIL) {
-        navigate('/admin');
-      }
-    };
-    checkUser();
-  }, [navigate]);
+  // Remove direct redirect-to-admin check here!
+  // Handle all admin checks only in /admin page after successful authentication/session load
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,18 +58,14 @@ const AuthPage: React.FC = () => {
           email,
           password,
         });
-
         if (error) throw error;
-
-        if (email === ADMIN_EMAIL) {
-          navigate('/admin');
-        } else {
-          toast({
-            title: "Access Denied",
-            description: "Only the authorized admin email can log in.",
-            variant: "destructive",
-          });
-        }
+        // Do NOT redirect or show Access Denied here, let /admin handle the check.
+        // All users can attempt login, admin enforcement is on the admin page only.
+        toast({
+          title: "Success",
+          description: "Signed in. Redirecting...",
+        });
+        navigate('/admin');
       }
     } catch (error: any) {
       toast({
@@ -109,6 +95,7 @@ const AuthPage: React.FC = () => {
       });
       setLoading(false);
     }
+    // Do NOT gate Google login here; allow redirect and let /admin handle permission.
   };
 
   return (
@@ -194,7 +181,9 @@ const AuthPage: React.FC = () => {
                 <GoogleIcon className="mr-2" />
                 Continue with Google
               </Button>
-              <div className="text-xs text-center text-purple-600 mt-1">Only <span className="font-medium">{ADMIN_EMAIL}</span> will be granted admin access.</div>
+              <div className="text-xs text-center text-purple-600 mt-1">
+                Only admin accounts are allowed access.
+              </div>
             </div>
           )}
 
@@ -214,4 +203,3 @@ const AuthPage: React.FC = () => {
 };
 
 export default AuthPage;
-
