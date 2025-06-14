@@ -8,6 +8,20 @@ import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, UserPlus, Flower2 } from 'lucide-react';
 
+// NEW: Google Icon SVG
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} viewBox="0 0 48 48" width={20} height={20} fill="none">
+    <g>
+      <path fill="#FFC107" d="M43.611 20.083h-1.943v-.083H24v7.917h11.232c-1.611 4.506-5.93 7.75-11.232 7.75-6.627 0-12-5.373-12-12s5.373-12 12-12c2.934 0 5.617 1.057 7.722 2.791l5.821-5.821C34.476 7.089 29.617 5 24 5 12.954 5 4 13.954 4 25s8.954 20 20 20c11.046 0 20-8.954 20-20 0-1.341-.138-2.651-.389-3.917z"/>
+      <path fill="#FF3D00" d="M6.306 14.691l6.522 4.785C14.68 16.09 19.018 13 24 13c2.934 0 5.617 1.057 7.722 2.791l5.821-5.821C34.476 7.089 29.617 5 24 5c-7.246 0-13.397 3.893-17.056 9.691z"/>
+      <path fill="#4CAF50" d="M24 45c5.445 0 10.399-1.866 14.246-5.06l-6.614-5.603C29.096 36.754 26.673 37.5 24 37.5c-5.282 0-9.787-3.396-11.405-8.057l-6.477 4.998C8.572 41.019 15.63 45 24 45z"/>
+      <path fill="#1976D2" d="M43.611 20.083h-1.943v-.083H24v7.917h11.232c-1.02 2.854-3.002 5.097-5.646 6.443.001 0 .001.001.002.001l6.614 5.603C39.333 41.447 44 37 44 25c0-1.341-.138-2.651-.389-3.917z"/>
+    </g>
+  </svg>
+);
+
+const ADMIN_EMAIL = 'jethrolalio1117@gmail.com';
+
 const AuthPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -19,7 +33,8 @@ const AuthPage: React.FC = () => {
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      // Check admin privilege after login
+      if (session?.user?.email === ADMIN_EMAIL) {
         navigate('/admin');
       }
     };
@@ -42,9 +57,8 @@ const AuthPage: React.FC = () => {
             }
           }
         });
-        
         if (error) throw error;
-        
+
         toast({
           title: "Account created!",
           description: "Please check your email to verify your account.",
@@ -54,10 +68,18 @@ const AuthPage: React.FC = () => {
           email,
           password,
         });
-        
+
         if (error) throw error;
-        
-        navigate('/admin');
+
+        if (email === ADMIN_EMAIL) {
+          navigate('/admin');
+        } else {
+          toast({
+            title: "Access Denied",
+            description: "Only the authorized admin email can log in.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error: any) {
       toast({
@@ -66,6 +88,25 @@ const AuthPage: React.FC = () => {
         variant: "destructive",
       });
     } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google Sign In
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/admin`
+      },
+    });
+    if (error) {
+      toast({
+        title: "Google Sign-In Error",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
       setLoading(false);
     }
   };
@@ -140,6 +181,23 @@ const AuthPage: React.FC = () => {
             </Button>
           </form>
 
+          {/* Google Sign-In Button */}
+          {!isSignUp && (
+            <div className="mt-6">
+              <Button
+                type="button"
+                onClick={handleGoogleSignIn}
+                className="w-full bg-white text-purple-800 border border-purple-200 hover:bg-purple-50 font-medium shadow-none flex items-center justify-center space-x-2"
+                disabled={loading}
+                variant="outline"
+              >
+                <GoogleIcon className="mr-2" />
+                Continue with Google
+              </Button>
+              <div className="text-xs text-center text-purple-600 mt-1">Only <span className="font-medium">{ADMIN_EMAIL}</span> will be granted admin access.</div>
+            </div>
+          )}
+
           <div className="text-center mt-6">
             <button
               type="button"
@@ -156,3 +214,4 @@ const AuthPage: React.FC = () => {
 };
 
 export default AuthPage;
+
