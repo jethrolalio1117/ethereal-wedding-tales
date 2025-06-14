@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Upload, Trash2, Star, StarOff, Plus } from 'lucide-react';
+import { Upload, Trash2, Star, StarOff, Plus, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface GalleryImage {
@@ -24,6 +24,7 @@ const GalleryManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -37,19 +38,25 @@ const GalleryManagement: React.FC = () => {
 
   const fetchImages = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('gallery_images')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching images:', error);
+        setError('Failed to load gallery images');
+        return;
+      }
+      
+      console.log('Fetched images:', data);
       setImages(data || []);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch images",
-        variant: "destructive",
-      });
+      console.error('Unexpected error:', error);
+      setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -58,33 +65,48 @@ const GalleryManagement: React.FC = () => {
   const uploadImage = async (file: File) => {
     try {
       setUploading(true);
+      console.log('Starting image upload:', file.name);
       
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `gallery/${fileName}`;
+
+      console.log('Uploading to path:', filePath);
 
       const { error: uploadError } = await supabase.storage
         .from('gallery')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('gallery')
         .getPublicUrl(filePath);
 
+      console.log('Public URL:', publicUrl);
+
+      const { data: user } = await supabase.auth.getUser();
+      
       const { error: dbError } = await supabase
         .from('gallery_images')
         .insert({
           title: formData.title,
-          description: formData.description,
-          caption: formData.caption,
+          description: formData.description || null,
+          caption: formData.caption || null,
           image_url: publicUrl,
           is_featured: formData.is_featured,
-          uploaded_by: (await supabase.auth.getUser()).data.user?.id
+          uploaded_by: user.user?.id
         });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database insert error:', dbError);
+        throw dbError;
+      }
 
       toast({
         title: "Success",
@@ -93,11 +115,12 @@ const GalleryManagement: React.FC = () => {
 
       setFormData({ title: '', description: '', caption: '', is_featured: false });
       setDialogOpen(false);
-      fetchImages();
+      await fetchImages();
     } catch (error: any) {
+      console.error('Upload error:', error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Upload Error",
+        description: error.message || "Failed to upload image",
         variant: "destructive",
       });
     } finally {
@@ -107,20 +130,29 @@ const GalleryManagement: React.FC = () => {
 
   const deleteImage = async (id: string, imageUrl: string) => {
     try {
-      // Delete from database
+      console.log('Deleting image:', id, imageUrl);
+      
+      // Delete from database first
       const { error: dbError } = await supabase
         .from('gallery_images')
         .delete()
         .eq('id', id);
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database delete error:', dbError);
+        throw dbError;
+      }
 
-      // Delete from storage
-      const path = imageUrl.split('/gallery/')[1];
-      if (path) {
-        await supabase.storage
-          .from('gallery')
-          .remove([`gallery/${path}`]);
+      // Try to delete from storage (don't fail if this doesn't work)
+      try {
+        const path = imageUrl.split('/gallery/')[1];
+        if (path) {
+          await supabase.storage
+            .from('gallery')
+            .remove([`gallery/${path}`]);
+        }
+      } catch (storageError) {
+        console.warn('Storage delete failed (non-critical):', storageError);
       }
 
       toast({
@@ -128,11 +160,12 @@ const GalleryManagement: React.FC = () => {
         description: "Image deleted successfully",
       });
       
-      fetchImages();
+      await fetchImages();
     } catch (error: any) {
+      console.error('Delete error:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete image",
+        title: "Delete Error",
+        description: error.message || "Failed to delete image",
         variant: "destructive",
       });
     }
@@ -140,23 +173,29 @@ const GalleryManagement: React.FC = () => {
 
   const toggleFeatured = async (id: string, currentStatus: boolean) => {
     try {
+      console.log('Toggling featured status:', id, currentStatus);
+      
       const { error } = await supabase
         .from('gallery_images')
         .update({ is_featured: !currentStatus })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Toggle featured error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
         description: `Image ${!currentStatus ? 'featured' : 'unfeatured'} successfully`,
       });
       
-      fetchImages();
+      await fetchImages();
     } catch (error: any) {
+      console.error('Toggle error:', error);
       toast({
-        title: "Error",
-        description: "Failed to update image",
+        title: "Update Error",
+        description: error.message || "Failed to update image",
         variant: "destructive",
       });
     }
@@ -180,7 +219,24 @@ const GalleryManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
-        <div className="text-center py-8">Loading gallery...</div>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p>Loading gallery...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
+        <div className="text-center py-8">
+          <AlertCircle className="text-red-500 mx-auto mb-4" size={48} />
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={fetchImages} variant="outline">
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
@@ -258,7 +314,12 @@ const GalleryManagement: React.FC = () => {
                     disabled={uploading}
                     className="border-purple-200"
                   />
-                  {uploading && <p className="text-sm text-purple-600 mt-2">Uploading...</p>}
+                  {uploading && (
+                    <div className="flex items-center mt-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-2"></div>
+                      <p className="text-sm text-purple-600">Uploading...</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </DialogContent>
@@ -272,6 +333,10 @@ const GalleryManagement: React.FC = () => {
                 src={image.image_url}
                 alt={image.title}
                 className="w-full h-48 object-cover"
+                onError={(e) => {
+                  console.error('Image load error:', image.image_url);
+                  (e.target as HTMLImageElement).src = '/placeholder.svg';
+                }}
               />
               
               <div className="p-4">

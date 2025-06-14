@@ -41,21 +41,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       console.log('Checking admin status for user:', userId);
       
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Admin check timeout')), 10000)
-      );
-      
-      const queryPromise = supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
-        .maybeSingle();
-      
-      const { data: profile, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
+        .single();
       
       if (error) {
         console.error('Error fetching profile:', error);
+        // If no profile exists, assume non-admin for now
         setIsAdmin(false);
       } else {
         console.log('Profile data:', profile);
@@ -72,11 +66,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session first
-    const getInitialSession = async () => {
+    const initializeAuth = async () => {
       try {
-        console.log('Getting initial session...');
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('Initializing auth...');
+        
+        // Get initial session
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+        
         console.log('Initial session:', initialSession?.user?.email);
         
         if (mounted) {
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('Error initializing auth:', error);
         if (mounted) {
           setLoading(false);
           setIsAdmin(false);
@@ -115,13 +115,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             setIsAdmin(false);
           }
           
-          setLoading(false);
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            setLoading(false);
+          }
         }
       }
     );
 
-    // Get initial session
-    getInitialSession();
+    // Initialize auth
+    initializeAuth();
 
     return () => {
       mounted = false;
@@ -131,6 +133,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setIsAdmin(false);
   };
 
   return (

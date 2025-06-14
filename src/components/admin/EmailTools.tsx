@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Send, Users, CheckCircle } from 'lucide-react';
+import { Mail, Send, Users, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -120,7 +120,7 @@ Liam & Mia ✨`
           throw new Error(`Failed to fetch guests: ${error.message}`);
         }
         
-        recipients = guests?.map(guest => guest.email) || [];
+        recipients = guests?.map(guest => guest.email).filter(email => email) || [];
       }
 
       if (recipients.length === 0) {
@@ -146,15 +146,25 @@ Liam & Mia ✨`
       });
 
       if (error) {
+        console.error('Edge function error:', error);
         throw error;
       }
 
       console.log('Email sending response:', data);
 
-      toast({
-        title: "Emails Sent Successfully!",
-        description: `Your ${emailType || 'custom'} email has been sent to ${recipients.length} recipient(s).`,
-      });
+      // Check if this is the demo implementation
+      if (data?.message?.includes('demo') || !data?.actualEmailsSent) {
+        toast({
+          title: "Demo Mode - Emails Not Actually Sent",
+          description: `This is a demo implementation. ${recipients.length} email(s) would be sent in production. To send real emails, you need to configure the Resend API key.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Emails Sent Successfully!",
+          description: `Your ${emailType || 'custom'} email has been sent to ${recipients.length} recipient(s).`,
+        });
+      }
 
       // Reset form
       setEmailType('');
@@ -290,7 +300,10 @@ Liam & Mia ✨`
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
             >
               {sending ? (
-                'Sending...'
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </div>
               ) : (
                 <>
                   <Send className="mr-2" size={18} />
@@ -299,11 +312,11 @@ Liam & Mia ✨`
               )}
             </Button>
 
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
               <div className="flex items-start">
-                <CheckCircle className="text-blue-600 mr-2 mt-0.5" size={16} />
-                <div className="text-sm text-blue-800">
-                  <strong>Note:</strong> This is a demo implementation. To send real emails, you'll need to set up the Resend API integration in your edge functions.
+                <AlertTriangle className="text-amber-600 mr-2 mt-0.5" size={16} />
+                <div className="text-sm text-amber-800">
+                  <strong>Email Setup Required:</strong> To send real emails, you need to configure the Resend API key in your Supabase Edge Functions. Currently running in demo mode.
                 </div>
               </div>
             </div>
