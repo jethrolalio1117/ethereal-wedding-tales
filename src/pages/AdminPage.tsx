@@ -4,10 +4,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Users, Camera, Mail, Flower2 } from 'lucide-react';
+import { LogOut, Users, Camera, Mail, Home, Flower2 } from 'lucide-react';
 import GuestManagement from '@/components/admin/GuestManagement';
 import GalleryManagement from '@/components/admin/GalleryManagement';
 import EmailTools from '@/components/admin/EmailTools';
+import HomeManagement from '@/components/admin/HomeManagement';
 
 const AdminPage: React.FC = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -79,8 +80,12 @@ const AdminPage: React.FC = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="guests" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-white/60 border border-purple-200">
+        <Tabs defaultValue="home" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 bg-white/60 border border-purple-200">
+            <TabsTrigger value="home" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-800">
+              <Home className="mr-2" size={18} />
+              Home Management
+            </TabsTrigger>
             <TabsTrigger value="guests" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-800">
               <Users className="mr-2" size={18} />
               Guest Management
@@ -94,6 +99,10 @@ const AdminPage: React.FC = () => {
               Email Tools
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="home" className="mt-6">
+            <HomeManagement />
+          </TabsContent>
 
           <TabsContent value="guests" className="mt-6">
             <GuestManagement />

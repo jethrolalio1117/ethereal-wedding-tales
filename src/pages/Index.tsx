@@ -1,24 +1,53 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Heart, CalendarDays, MapPin } from 'lucide-react';
 
 const Index: React.FC = () => {
-  // Placeholder image - ideally, the couple would provide their own.
-  const heroImageUrl = "https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80";
+  // Default values
+  const defaultData = {
+    backgroundImage: "https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
+    coupleNames: "Liam & Mia",
+    weddingDate: "October 25th, 2025",
+    ceremonyTime: "3:00 PM",
+    venueName: "The Enchanted Gardens",
+    venueAddress: "123 Dreamy Lane, Wonderland"
+  };
+
+  const [homeData, setHomeData] = useState(defaultData);
+
+  useEffect(() => {
+    // Load data from localStorage if available
+    const storedData = localStorage.getItem('homePageData');
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        setHomeData({
+          backgroundImage: parsedData.backgroundImage || defaultData.backgroundImage,
+          coupleNames: parsedData.coupleNames || defaultData.coupleNames,
+          weddingDate: parsedData.weddingDate || defaultData.weddingDate,
+          ceremonyTime: parsedData.ceremonyTime || defaultData.ceremonyTime,
+          venueName: parsedData.venueName || defaultData.venueName,
+          venueAddress: parsedData.venueAddress || defaultData.venueAddress
+        });
+      } catch (error) {
+        console.error('Error parsing stored home data:', error);
+      }
+    }
+  }, []);
 
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
       <section 
         className="relative bg-cover bg-center py-32 md:py-48 rounded-lg shadow-2xl overflow-hidden animate-fade-in opacity-0"
-        style={{ backgroundImage: `url(${heroImageUrl})`, animationDelay: '0.1s', animationFillMode: 'forwards' }}
+        style={{ backgroundImage: `url(${homeData.backgroundImage})`, animationDelay: '0.1s', animationFillMode: 'forwards' }}
       >
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative container mx-auto text-center text-white px-6">
           <h1 className="text-5xl md:text-7xl font-playfair mb-4 animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-            Liam & Mia
+            {homeData.coupleNames}
           </h1>
           <p className="text-xl md:text-2xl font-lato mb-8 animate-fade-in-up opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
             Are joyfully inviting you to celebrate their wedding
@@ -46,8 +75,8 @@ const Index: React.FC = () => {
                 <CalendarDays size={28} className="text-secondary mr-3" />
                 <h3 className="text-2xl font-playfair text-secondary">Date & Time</h3>
               </div>
-              <p className="text-foreground/70">Saturday, October 25th, 2025</p>
-              <p className="text-foreground/70">Ceremony at 3:00 PM</p>
+              <p className="text-foreground/70">Saturday, {homeData.weddingDate}</p>
+              <p className="text-foreground/70">Ceremony at {homeData.ceremonyTime}</p>
               <p className="text-foreground/70">Reception to follow</p>
             </div>
             <div className="bg-card p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -55,8 +84,8 @@ const Index: React.FC = () => {
                 <MapPin size={28} className="text-secondary mr-3" />
                 <h3 className="text-2xl font-playfair text-secondary">Location</h3>
               </div>
-              <p className="text-foreground/70">The Enchanted Gardens</p>
-              <p className="text-foreground/70">123 Dreamy Lane, Wonderland</p>
+              <p className="text-foreground/70">{homeData.venueName}</p>
+              <p className="text-foreground/70">{homeData.venueAddress}</p>
               <Link to="#" className="text-primary hover:underline text-sm mt-1 inline-block">View Map</Link>
             </div>
           </div>
