@@ -3,9 +3,13 @@ import { useHomePageData } from '@/hooks/useHomePageData';
 import { useSectionInView } from '@/hooks/useSectionInView';
 import React from 'react';
 
+const DEFAULT_HERO_IMAGE = "https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80";
+
 const HomeSection = () => {
   const { data, loading } = useHomePageData();
   const [sectionRef, inView] = useSectionInView();
+
+  const bgImage = data.backgroundImage && data.backgroundImage !== "" ? data.backgroundImage : DEFAULT_HERO_IMAGE;
 
   if (loading) {
     return (
@@ -18,6 +22,7 @@ const HomeSection = () => {
   return (
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
+      style={{ backgroundImage: `url(${bgImage})` }}
       className={`min-h-screen bg-cover bg-center bg-fixed relative overflow-hidden transition-all duration-1000 ${
         inView ? "animate-fade-in-up" : ""
       }`}
@@ -57,7 +62,7 @@ const HomeSection = () => {
       </div>
       <div className="absolute inset-0 bg-black bg-opacity-20"></div>
       <div className="relative z-10 flex items-center justify-center min-h-screen text-center text-white px-4">
-        <div className="max-w-4xl mx-auto opacity-0" style={inView ? { animation: "fade-in-up 1s forwards", animationDelay: "0.2s" } : {}}>
+        <div className="max-w-4xl mx-auto opacity-0" style={inView ? { animation: "fade-in-up 0.5s forwards", animationDelay: "0.2s" } : {}}>
           {/* ... keep heading, names, date, details ... */}
           <div className="mb-8 relative">
             <Flower2 className="text-white/80 mx-auto mb-6 animate-pulse" size={64} strokeWidth={1} />

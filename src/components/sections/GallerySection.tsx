@@ -4,6 +4,15 @@ import { Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSectionInView } from '@/hooks/useSectionInView';
 
+const FALLBACK_IMAGES = [
+  { id: '1', title: 'Couple smiling', caption: 'Joyful moments.', image_url: 'https://picsum.photos/seed/wedding1/600/400', is_featured: false, created_at: '', description: '' },
+  { id: '2', title: 'Couple holding hands', caption: 'Together is a beautiful place to be.', image_url: 'https://picsum.photos/seed/wedding2/600/400', is_featured: false, created_at: '', description: '' },
+  { id: '3', title: 'Scenic view with couple', caption: 'Our adventure continues.', image_url: 'https://picsum.photos/seed/wedding3/600/400', is_featured: false, created_at: '', description: '' },
+  { id: '4', title: 'Ethereal starry night', caption: 'Under the stars.', image_url: 'https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80', is_featured: false, created_at: '', description: '' },
+  { id: '5', title: 'Laughing couple', caption: 'Happiness is handmade.', image_url: 'https://picsum.photos/seed/wedding5/600/400', is_featured: false, created_at: '', description: '' },
+  { id: '6', title: 'Couple in nature', caption: 'Love in bloom.', image_url: 'https://picsum.photos/seed/wedding6/600/400', is_featured: false, created_at: '', description: '' },
+];
+
 interface GalleryImage {
   id: string;
   title: string;
@@ -31,17 +40,10 @@ const GallerySection: React.FC = () => {
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error || !data || data.length === 0) throw error;
       setImages(data || []);
     } catch (error) {
-      setImages([
-        { id: '1', title: 'Couple smiling', caption: 'Joyful moments.', image_url: 'https://picsum.photos/seed/wedding1/600/400', is_featured: false, created_at: '', description: '' },
-        { id: '2', title: 'Couple holding hands', caption: 'Together is a beautiful place to be.', image_url: 'https://picsum.photos/seed/wedding2/600/400', is_featured: false, created_at: '', description: '' },
-        { id: '3', title: 'Scenic view with couple', caption: 'Our adventure continues.', image_url: 'https://picsum.photos/seed/wedding3/600/400', is_featured: false, created_at: '', description: '' },
-        { id: '4', title: 'Ethereal starry night', caption: 'Under the stars.', image_url: 'https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80', is_featured: false, created_at: '', description: '' },
-        { id: '5', title: 'Laughing couple', caption: 'Happiness is handmade.', image_url: 'https://picsum.photos/seed/wedding5/600/400', is_featured: false, created_at: '', description: '' },
-        { id: '6', title: 'Couple in nature', caption: 'Love in bloom.', image_url: 'https://picsum.photos/seed/wedding6/600/400', is_featured: false, created_at: '', description: '' },
-      ]);
+      setImages(FALLBACK_IMAGES);
     } finally {
       setLoading(false);
     }
@@ -59,9 +61,7 @@ const GallerySection: React.FC = () => {
   return (
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
-      className={`py-12 transition-all duration-1000 relative ${
-        inView ? "animate-fade-in-up" : ""
-      }`}
+      className={`py-12 transition-all duration-1000 relative ${inView ? "animate-fade-in-up" : ""}`}
     >
       <div className="text-center mb-12">
         <Camera className={`text-primary mx-auto mb-4 ${inView ? "animate-fade-in-up" : ""}`} size={64} strokeWidth={1.5} />
@@ -73,7 +73,7 @@ const GallerySection: React.FC = () => {
           <div
             key={image.id}
             className={`group relative overflow-hidden rounded-lg shadow-xl aspect-w-1 aspect-h-1 opacity-0`}
-            style={inView ? { animation: `fade-in-up 0.82s forwards`, animationDelay: `${0.2 + index * 0.13}s` } : {}}
+            style={inView ? { animation: `fade-in-up 0.5s forwards`, animationDelay: `${0.2 + index * 0.13}s` } : {}}
           >
             <img
               src={image.image_url}
