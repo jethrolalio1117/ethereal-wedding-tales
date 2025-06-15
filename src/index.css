@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -171,232 +172,28 @@
     50% { transform: scale(1.05) rotate(2deg); opacity: 1; }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
   }
+
   .bloom-animation {
-    animation: bloom 1.5s cubic-bezier(0.66,0,0.44,1) 1;
+    animation: bloom 2s ease-out forwards;
   }
 
-  @keyframes heart-pulse {
-    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 #f472b6); }
-    30% { transform: scale(1.25); filter: drop-shadow(0 0 16px #f472b6); }
-    60% { transform: scale(1.1); filter: drop-shadow(0 0 8px #d1b1ff); }
-  }
-  .animate-heart-pulse {
-    animation: heart-pulse 1.6s ease-out 1;
+  @keyframes sparkle {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
   }
 
-  @keyframes photo-shimmer {
-    0% { box-shadow: 0 0 0 0 transparent; }
-    40% { box-shadow: 0 0 40px 4px #d1b1ff80; }
-    80% { box-shadow: 0 0 60px 12px #f8bbd040; }
-    100% { box-shadow: 0 0 0 0 transparent; }
-  }
-  .animate-photo-shimmer {
-    animation: photo-shimmer 1.3s cubic-bezier(0.66,0,0.44,1) 1;
+  .sparkle {
+    animation: sparkle 3s ease-in-out infinite;
   }
 
-  .gallery-glow {
-    box-shadow: 0 0 60px 0 #f8bbd055, 0 4px 40px 0 #d1b1ff22;
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
   }
 
-  @keyframes confetti-fall {
-    0% { transform: translateY(-60px) scale(1.2) rotate(0deg);}
-    65% { transform: translateY(45vh) scale(1) rotate(165deg);}
-    100% { transform: translateY(95vh) scale(0.95) rotate(359deg);}
-  }
-  .confetti-explode { z-index: 5; }
-}
-
-/* --- CUSTOM ADDED ANIMATIONS FOR SECTION ENTRANCES --- */
-
-/* HomeSection - PETAL BURST */
-@keyframes petal-burst {
-  0% { opacity: 0; transform: scale(0.8); }
-  60% { opacity: .7; transform: scale(1.07);}
-  100% { opacity: 1; transform: scale(1);}
-}
-.petal-burst {
-  animation: petal-burst 1.3s cubic-bezier(0.7,0,0.3,1) 1;
-}
-.petal-burst-petal {
-  animation: petal-burst-petal-anim 1.2s cubic-bezier(0.77, 0, 0.18, 1) 1;
-  will-change: transform, opacity;
-}
-@keyframes petal-burst-petal-anim {
-  0% { opacity: 0; transform: scale(0.2) translate(-50%, -50%) rotate(10deg);}
-  55% { opacity: .85; }
-  85% { opacity: .95; }
-  100% { opacity: 0.07; transform: scale(1.38) translate(-50%, -50%) rotate(360deg);}
-}
-
-/* StorySection - STORYBOOK PAGE TURN */
-@keyframes storybook-page-turn {
-  0% { clip-path: polygon(0 0,0 0,0 100%,0 100%); opacity: 0.2;}
-  65% { opacity: 1;}
-  100% { clip-path: polygon(0 0,100% 0,100% 100%,0 100%); opacity: 1; }
-}
-.storybook-page-turn {
-  animation: storybook-page-turn 1.2s cubic-bezier(0.54,0,0.6,1) 1;
-}
-.storybook-card {
-  overflow: hidden;
-}
-@keyframes page-sweep {
-  from {
-    opacity: 0;
-    clip-path: polygon(0 0,0 0,0 100%,0 100%);
-    transform: translateY(20px) scale(0.97) skewY(-2deg);
-  }
-  70% {
-    opacity: 1;
-    transform: translateY(-2px) scale(1.01) skewY(1deg);
-  }
-  to {
-    opacity: 1;
-    clip-path: polygon(0 0,100% 0,100% 100%,0 100%);
-    transform: translateY(0) scale(1) skewY(0);
-  }
-}
-.animate-page-sweep {
-  animation: page-sweep 1.12s cubic-bezier(0.54,0,0.35,1) 1;
-}
-
-/* GallerySection - GALLERY PHOTO DROP ENTRANCE */
-@keyframes gallery-drop-entrance {
-  0% { box-shadow: none; background: transparent;}
-  40% { box-shadow: 0 0 40px 6px #d1b1ff50;}
-  90% { box-shadow: 0 0 54px 10px #f8bbd0a7; }
-  100% { box-shadow: none; background: none;}
-}
-.gallery-drop-entrance {
-  animation: gallery-drop-entrance 1.25s cubic-bezier(0.6, 0, 0.38, 1) 1;
-}
-@keyframes gallery-drop {
-  0% { opacity: 0; transform: translateY(-60px) scale(0.88) rotate(-7deg);}
-  66% { opacity: 1; transform: translateY(7px) scale(1.01) rotate(2deg);}
-  85% { transform: translateY(-2px) scale(1.04);}
-  100% { opacity:1; transform: translateY(0) scale(1) rotate(0);}
-}
-.gallery-drop {
-  animation: gallery-drop 0.98s cubic-bezier(0.55, 0, 0.65, 1) forwards;
-}
-
-/* Gallery - Camera wiggle */
-@keyframes cam-wiggle {
-  0%,100% {transform: rotate(0);}
-  14% {transform: rotate(-9deg);}
-  24% {transform: rotate(12deg);}
-  38% {transform: rotate(-4deg);}
-  55% {transform: rotate(7deg);}
-  65% {transform: rotate(-3deg);}
-  75% {transform: rotate(3deg);}
-}
-.animate-cam-wiggle {
-  animation: cam-wiggle 1.2s cubic-bezier(0.35,0,0.85,1) 1;
-}
-
-/* RSVP envelope wiggle */
-@keyframes envelope-shake {
-  0%,100% {transform: rotate(0);}
-  18% {transform: rotate(-12deg);}
-  36% {transform: rotate(12deg);}
-  52% {transform: rotate(-7deg);}
-  76% {transform: rotate(5deg);}
-}
-.envelope-shake {
-  animation: envelope-shake 0.92s cubic-bezier(0.55,0,0.7,1) 1;
-}
-
-/* Confetti already exists; no change */
-
-/* --- End CUSTOM ANIMATIONS --- */
-
-/* Speed up fade-in-up animation for all sections */
-@keyframes fade-in-up {
-  0% {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.5s cubic-bezier(0.54, 0, 0.35, 1) forwards;
-}
-
-/* (Keep previous fade-in, fade-out, etc. for shadcn, but this now overrides for .animate-fade-in-up) */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.2s ease-in-out forwards;
-}
-
-@keyframes fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-.animate-fade-out {
-  animation: fade-out 0.3s ease-in-out forwards;
-}
-
-@keyframes slide-in-from-left {
-  0% {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in-from-left {
-  animation: slide-in-from-left 0.4s ease-out;
-}
-
-@keyframes slide-in-from-right {
-  0% {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in-from-right {
-  animation: slide-in-from-right 0.4s ease-out;
-}
-
-@keyframes accordion-down {
-  from {
-    height: 0;
-  }
-  to {
-    height: var(--radix-accordion-content-height);
-  }
-}
-
-@keyframes accordion-up {
-  from {
-    height: var(--radix-accordion-content-height);
-  }
-  to {
-    height: 0;
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
   }
 }

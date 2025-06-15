@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useRSVPPageData } from '@/hooks/useRSVPPageData';
-import { useSectionInView } from '@/hooks/useSectionInView';
 
 const RSVPSection = () => {
   const { data: rsvpData } = useRSVPPageData();
@@ -19,7 +18,6 @@ const RSVPSection = () => {
   const [dietary, setDietary] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sectionRef, inView] = useSectionInView();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,12 +71,8 @@ const RSVPSection = () => {
   };
 
   return (
-    <div
-      ref={sectionRef as React.RefObject<HTMLDivElement>}
-      className={`transition-all duration-1000 relative ${
-        inView ? "animate-fade-in-up" : ""
-      }`}
-    >
+    <div className="animate-fade-in-up">
+      {/* Everything from the original RSVPPage component body, but within this section */}
       {/* Enhanced Background with Florals */}
       <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
         {rsvpData.backgroundImage && (
@@ -87,7 +81,7 @@ const RSVPSection = () => {
             style={{ backgroundImage: `url(${rsvpData.backgroundImage})` }}
           />
         )}
-        {/* Floating florals and petals */}
+        {/* ... keep floating florals and petals ... */}
         <div className="absolute top-10 left-10 text-pink-300 opacity-20 animate-pulse">
           <Flower2 size={80} className="animate-bounce" />
         </div>
@@ -115,7 +109,7 @@ const RSVPSection = () => {
       <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-sm p-8 md:p-12 rounded-3xl shadow-2xl border border-pink-200 relative z-10">
         <div className="text-center mb-10">
           <div className="relative">
-            <MailCheck className={`text-primary mx-auto mb-4 animate-pulse`} size={64} strokeWidth={1.5} />
+            <MailCheck className="text-primary mx-auto mb-4 animate-pulse" size={64} strokeWidth={1.5} />
             <div className="absolute -top-2 -right-2 text-pink-300 opacity-60">
               <Flower2 size={32} />
             </div>
