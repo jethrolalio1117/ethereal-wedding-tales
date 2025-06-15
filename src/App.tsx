@@ -7,9 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
-import StoryPage from "./pages/StoryPage";
-import GalleryPage from "./pages/GalleryPage";
-import RSVPPage from "./pages/RSVPPage";
 import AuthPage from "./pages/AuthPage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
@@ -26,12 +23,13 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/admin" element={<AdminPage />} />
-            {/* All other routes get the main layout */}
-            <Route path="*" element={
+            <Route path="/" element={
               <Layout>
                 <Index />
               </Layout>
             } />
+            {/* Catch-all for any other route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
