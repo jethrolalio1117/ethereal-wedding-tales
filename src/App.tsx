@@ -24,8 +24,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Auth page takes priority on /auth */}
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/admin" element={<AdminPage />} />
             {/* All other routes get the main layout */}
             <Route path="*" element={
               <Layout>
