@@ -1,4 +1,3 @@
-
 import { Flower2, Calendar, MapPin } from 'lucide-react';
 import { useHomePageData } from '@/hooks/useHomePageData';
 
@@ -14,7 +13,7 @@ const HomeSection = () => {
   }
 
   return (
-    <section id="home" className="min-h-screen bg-cover bg-center bg-fixed relative overflow-hidden" style={{ backgroundImage: `url(${data.backgroundImage})` }}>
+    <div className="min-h-screen bg-cover bg-center bg-fixed relative overflow-hidden animate-fade-in-up">
       {/* Floating Floral Elements and overlays */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-10 left-10 text-pink-300 opacity-30 animate-pulse"><Flower2 size={80} className="animate-bounce" /></div>
@@ -48,7 +47,7 @@ const HomeSection = () => {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

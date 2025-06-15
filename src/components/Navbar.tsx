@@ -1,5 +1,5 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Menu, X, Sparkles, BookOpen, Image, Send } from 'lucide-react';
 
 const navItems = [
@@ -12,8 +12,9 @@ const navItems = [
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [coupleNames, setCoupleNames] = useState('L & M');
+  const [activeSection, setActiveSection] = useState('home');
 
-  // Load couple names from localStorage and create logo
+  // Handle couple names as before
   useEffect(() => {
     const updateCoupleNames = () => {
       const storedData = localStorage.getItem('homePageData');
@@ -53,11 +54,39 @@ const Navbar: React.FC = () => {
     };
   }, []);
 
-  // Helper function for smooth scroll
+  // Intersection Observer for active section
+  useEffect(() => {
+    const sectionIds = navItems.map(item => item.path);
+    const observerOptions = {
+      threshold: 0.3,
+    };
+    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+    const observer = new window.IntersectionObserver(handleIntersect, observerOptions);
+
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      sectionIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) observer.unobserve(el);
+      });
+      observer.disconnect();
+    };
+  }, []);
+
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     setIsOpen(false);
   };
@@ -66,18 +95,31 @@ const Navbar: React.FC = () => {
     <nav className="bg-background/80 backdrop-blur-md shadow-md sticky top-0 z-50 animate-fade-in">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <span className="text-3xl font-playfair font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer" onClick={() => scrollToSection('home')}>
+          <span
+            className="text-3xl font-playfair font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+            onClick={() => scrollToSection('home')}
+          >
             {coupleNames}
           </span>
-          <div className="hidden md:flex space-x-6">
+          <div className="hidden md:flex gap-8"> {/* Increased space between links */}
             {navItems.map((item) => (
               <button
                 key={item.name}
                 onClick={() => scrollToSection(item.path)}
-                className="text-foreground hover:text-primary transition-colors flex items-center space-x-1 group bg-transparent border-none outline-none"
-                style={{ background: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
+                className={`
+                  relative
+                  px-3 py-1 flex items-center space-x-1 group bg-transparent border-none outline-none transition-colors
+                  text-foreground hover:text-primary
+                  ${activeSection === item.path ? "text-primary font-bold after:absolute after:-bottom-1 after:left-0 after:w-full after:h-1 after:bg-primary after:rounded-full after:transition-all after:duration-300" : ""}
+                `}
+                style={{
+                  background: 'none',
+                  padding: 0,
+                  margin: 0,
+                  cursor: 'pointer',
+                }}
               >
-                <item.icon size={18} className="group-hover:text-primary transition-colors" />
+                <item.icon size={20} className="group-hover:text-primary transition-colors" />
                 <span>{item.name}</span>
               </button>
             ))}
@@ -91,13 +133,17 @@ const Navbar: React.FC = () => {
       </div>
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-background shadow-lg animate-fade-in-up opacity-0" style={{ animationFillMode: 'forwards' }}>
+        <div className="md:hidden absolute top-full left-0 right-0 bg-background shadow-lg animate-fade-in-up opacity-100" style={{ animationFillMode: 'forwards' }}>
           <div className="flex flex-col items-center space-y-4 py-4">
             {navItems.map((item) => (
               <button
                 key={item.name}
                 onClick={() => scrollToSection(item.path)}
-                className="text-foreground hover:text-primary transition-colors text-lg flex items-center space-x-2 group bg-transparent border-none outline-none"
+                className={`
+                  text-lg flex items-center space-x-2 group bg-transparent border-none outline-none
+                  text-foreground hover:text-primary transition-colors
+                  ${activeSection === item.path ? "text-primary font-bold" : ""}
+                `}
                 style={{ background: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
               >
                 <item.icon size={20} className="group-hover:text-primary transition-colors" />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,15 +46,15 @@ const GallerySection: React.FC = () => {
 
   if (loading) {
     return (
-      <section id="gallery" className="py-12 text-center">
+      <div className="py-12 text-center animate-fade-in-up">
         <Camera className="text-primary mx-auto mb-4" size={64} strokeWidth={1.5} />
         <p className="text-purple-600">Loading gallery...</p>
-      </section>
+      </div>
     );
   }
 
   return (
-    <section id="gallery" className="py-12 animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+    <div className="py-12 animate-fade-in-up">
       <div className="text-center mb-12">
         <Camera className="text-primary mx-auto mb-4" size={64} strokeWidth={1.5} />
         <h1 className="text-4xl md:text-5xl font-playfair text-primary mb-4">Our Cherished Moments</h1>
@@ -92,7 +91,7 @@ const GallerySection: React.FC = () => {
           <p>No images available yet. Check back soon!</p>
         </div>
       )}
-    </section>
+    </div>
   );
 };
 export default GallerySection;
