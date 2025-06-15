@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useRSVPPageData } from '@/hooks/useRSVPPageData';
 
-const RSVPSection = () => {
+const RSVPSection: React.FC = () => {
   const { data: rsvpData } = useRSVPPageData();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -71,7 +71,7 @@ const RSVPSection = () => {
   };
 
   return (
-    <div className="animate-fade-in-up">
+    <section id="rsvp" className="py-12 animate-fade-in-up opacity-0 relative min-h-screen" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
       {/* Everything from the original RSVPPage component body, but within this section */}
       {/* Enhanced Background with Florals */}
       <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
@@ -223,7 +223,7 @@ const RSVPSection = () => {
           Your RSVP will be securely stored and managed through our admin dashboard.
         </p>
       </div>
-    </div>
+    </section>
   );
 };
 

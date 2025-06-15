@@ -1,3 +1,4 @@
+
 import { Heart, Flower2 } from 'lucide-react';
 import { useHomePageData } from '@/hooks/useHomePageData';
 
@@ -5,7 +6,7 @@ const StorySection = () => {
   const { data } = useHomePageData();
 
   return (
-    <div className="py-24 bg-gradient-to-br from-pink-50 via-white to-purple-50 relative overflow-hidden animate-fade-in-up">
+    <section id="story" className="py-24 bg-gradient-to-br from-pink-50 via-white to-purple-50 relative overflow-hidden">
       {/* Background Florals */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-10 text-pink-400"><Flower2 size={200} /></div>
@@ -54,7 +55,7 @@ const StorySection = () => {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
