@@ -33,6 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
       message: message.substring(0, 100) + "...",
       recipientType,
       coupleNames,
+      websiteUrl,
       guestNames: guestNames ? Object.keys(guestNames).length + ' guest names provided' : 'No guest names',
       timestamp: new Date().toISOString()
     });
@@ -70,22 +71,32 @@ const handler = async (req: Request): Promise<Response> => {
     let errorCount = 0;
     const errors: string[] = [];
 
-    // Send emails to all recipients individually
-    for (const emailAddress of to) {
+    // Send emails to all recipients individually with proper rate limiting
+    for (let i = 0; i < to.length; i++) {
+      const emailAddress = to[i];
+      
       try {
-        console.log(`Sending email to: ${emailAddress}`);
+        console.log(`Sending email ${i + 1}/${to.length} to: ${emailAddress}`);
         
         // Get guest name from provided names or extract from email
         const recipientName = guestNames?.[emailAddress] || emailAddress.split('@')[0];
         
-        // Replace placeholders in the message
+        // Replace placeholders in the message with proper escaping
         let personalizedMessage = message
           .replace(/\{name\}/g, recipientName)
-          .replace(/\{website_url\}/g, websiteUrl || 'your-wedding-website.com')
-          .replace(/liam-mia-wedding\.lovable\.app/g, websiteUrl || 'your-wedding-website.com')
-          .replace(/Liam & Mia/g, coupleNames || 'Wedding Couple');
+          .replace(/\{website_url\}/g, websiteUrl || 'your-wedding-website.com');
         
-        // Create the sender email with couple names
+        // Replace any remaining old references with current couple names and website
+        if (coupleNames && websiteUrl) {
+          // Replace old domain references
+          personalizedMessage = personalizedMessage.replace(/liam-mia-wedding\.lovable\.app/g, websiteUrl.replace(/^https?:\/\//, ''));
+          
+          // Replace old couple name references
+          personalizedMessage = personalizedMessage.replace(/Liam & Mia/g, coupleNames);
+          personalizedMessage = personalizedMessage.replace(/Liam and Mia/g, coupleNames.replace(' & ', ' and '));
+        }
+        
+        // Create the sender email with couple names (use noreply@resend.dev for compatibility)
         const fromEmail = `${coupleNames || 'Wedding Couple'} <noreply@resend.dev>`;
         
         const emailResponse = await resend.emails.send({
@@ -102,30 +113,57 @@ const handler = async (req: Request): Promise<Response> => {
         console.log(`Email sent successfully to ${emailAddress}:`, emailResponse);
         successCount++;
         
-        // Add a small delay between emails to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Add delay between emails to avoid rate limiting (500ms = 2 emails per second max)
+        if (i < to.length - 1) { // Don't delay after the last email
+          await new Promise(resolve => setTimeout(resolve, 600)); // 600ms delay to be safe
+        }
         
       } catch (error: any) {
         console.error(`Failed to send email to ${emailAddress}:`, error);
         errorCount++;
-        errors.push(`${emailAddress}: ${error.message}`);
+        
+        // Provide more specific error messages
+        let errorMessage = error.message;
+        if (error.message.includes('You can only send testing emails')) {
+          errorMessage = `Domain not verified - can only send to verified addresses`;
+        } else if (error.message.includes('Too many requests')) {
+          errorMessage = `Rate limit exceeded - please try again later`;
+        }
+        
+        errors.push(`${emailAddress}: ${errorMessage}`);
+        
+        // If rate limited, add extra delay before next email
+        if (error.message.includes('Too many requests')) {
+          console.log('Rate limited, adding extra delay...');
+          await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+        }
       }
     }
 
     const allSuccessful = errorCount === 0;
     const statusCode = allSuccessful ? 200 : 207; // 207 = Multi-Status for partial success
 
+    const responseMessage = allSuccessful 
+      ? `All emails sent successfully to ${successCount} recipient(s)`
+      : `${successCount} emails sent successfully, ${errorCount} failed. Check logs for details.`;
+
+    console.log('Final email sending summary:', {
+      total: to.length,
+      successful: successCount,
+      failed: errorCount,
+      errors: errors
+    });
+
     return new Response(
       JSON.stringify({ 
         success: allSuccessful,
-        message: allSuccessful 
-          ? `All emails sent successfully to ${successCount} recipient(s)`
-          : `${successCount} emails sent successfully, ${errorCount} failed`,
+        message: responseMessage,
         recipientCount: to.length,
         successCount,
         errorCount,
         errors: errors.length > 0 ? errors : undefined,
-        actualEmailsSent: true
+        actualEmailsSent: true,
+        note: errorCount > 0 ? "Some emails failed due to domain verification or rate limits. Check Resend dashboard for details." : undefined
       }),
       {
         status: statusCode,
