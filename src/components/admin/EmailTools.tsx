@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Send, Users, UserCheck, UserX, Loader2 } from 'lucide-react';
+import { Send, Users, UserCheck, UserX, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useHomePageData } from '@/hooks/useHomePageData';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Guest {
   id: string;
@@ -37,6 +38,8 @@ You can visit our wedding website for the latest updates and information: {websi
 
 With love and excitement,
 ${homeData.coupleNames || 'The Happy Couple'}`);
+  const [sendingLog, setSendingLog] = useState<string[]>([]);
+  const [lastSendResult, setLastSendResult] = useState<any>(null);
 
   useEffect(() => {
     fetchGuests();
@@ -103,6 +106,8 @@ ${homeData.coupleNames || 'The Happy Couple'}`);
     }
 
     setSending(true);
+    setSendingLog([]);
+    setLastSendResult(null);
 
     try {
       const recipientEmails = recipients.map(guest => guest.email);
@@ -131,6 +136,11 @@ ${homeData.coupleNames || 'The Happy Couple'}`);
       }
 
       const result = response.data;
+      setLastSendResult(result);
+      
+      if (result.sendingLog) {
+        setSendingLog(result.sendingLog);
+      }
       
       if (result.success) {
         toast({
@@ -173,8 +183,20 @@ ${homeData.coupleNames || 'The Happy Couple'}`);
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-playfair text-purple-800">Email Communication</h2>
-        <p className="text-purple-600">Send updates and messages to your guests</p>
+        <p className="text-purple-600">Send updates and messages to your wedding guests</p>
       </div>
+
+      {/* Domain Verification Warning */}
+      <Alert className="border-amber-200 bg-amber-50">
+        <AlertCircle className="h-4 w-4 text-amber-600" />
+        <AlertDescription className="text-amber-800">
+          <strong>Important:</strong> Without domain verification, emails can only be sent to verified email addresses. 
+          To send to all guests, verify your domain at{' '}
+          <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+            resend.com/domains
+          </a>
+        </AlertDescription>
+      </Alert>
 
       <Card className="border-purple-200">
         <CardHeader>
@@ -247,6 +269,54 @@ ${homeData.coupleNames || 'The Happy Couple'}`);
               From: {homeData.coupleNames || 'Wedding Couple'}
             </p>
           </div>
+
+          {/* Sending Log */}
+          {sendingLog.length > 0 && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-blue-800">Email Sending Progress</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {sendingLog.map((log, index) => (
+                    <div key={index} className="text-xs font-mono text-blue-700 bg-blue-100 p-2 rounded">
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Last Send Result */}
+          {lastSendResult && (
+            <Card className={`border-2 ${lastSendResult.success ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}`}>
+              <CardHeader className="pb-3">
+                <CardTitle className={`text-sm flex items-center ${lastSendResult.success ? 'text-green-800' : 'text-orange-800'}`}>
+                  {lastSendResult.success ? <CheckCircle className="mr-2 h-4 w-4" /> : <AlertCircle className="mr-2 h-4 w-4" />}
+                  Email Sending Results
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-2">
+                <div className={`text-sm ${lastSendResult.success ? 'text-green-700' : 'text-orange-700'}`}>
+                  <p><strong>Total Recipients:</strong> {lastSendResult.recipientCount}</p>
+                  <p><strong>Successful:</strong> {lastSendResult.successCount}</p>
+                  <p><strong>Failed:</strong> {lastSendResult.errorCount}</p>
+                </div>
+                {lastSendResult.errors && lastSendResult.errors.length > 0 && (
+                  <div className="text-xs space-y-1">
+                    <p className="font-medium text-red-700">Failed emails:</p>
+                    {lastSendResult.errors.map((error: string, index: number) => (
+                      <p key={index} className="text-red-600 bg-red-100 p-1 rounded">{error}</p>
+                    ))}
+                  </div>
+                )}
+                {lastSendResult.note && (
+                  <p className="text-xs text-orange-600 mt-2">{lastSendResult.note}</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Button 
             onClick={sendEmails} 
