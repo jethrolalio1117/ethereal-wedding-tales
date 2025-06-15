@@ -3,17 +3,65 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MailCheck, Save, Calendar, Image } from 'lucide-react';
+import { MailCheck, Save, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRSVPPageData } from '@/hooks/useRSVPPageData';
+import { useHomePageData } from '@/hooks/useHomePageData';
+import { supabase } from '@/integrations/supabase/client';
 
 const RSVPManagement: React.FC = () => {
   const { toast } = useToast();
   const { data, updateData } = useRSVPPageData();
+  const { data: homeData } = useHomePageData();
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState(data);
+
+  // Update formData when data changes and auto-fill couple names
+  React.useEffect(() => {
+    setFormData({
+      ...data,
+      coupleNames: homeData.coupleNames || data.coupleNames
+    });
+  }, [data, homeData.coupleNames]);
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `rsvp-bg-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('gallery')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('gallery')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, backgroundImage: publicUrl });
+
+      toast({
+        title: "Background Image Uploaded",
+        description: "RSVP background image has been uploaded successfully.",
+      });
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload Failed",
+        description: "There was an error uploading the image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -94,15 +142,50 @@ const RSVPManagement: React.FC = () => {
           </div>
 
           <div>
-            <Label htmlFor="rsvpBackground" className="text-purple-700">Background Image URL (optional)</Label>
-            <Input
-              id="rsvpBackground"
-              value={formData.backgroundImage || ''}
-              onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
-              placeholder="Enter image URL for custom background"
-              className="border-purple-200 focus:border-purple-400"
-            />
+            <Label htmlFor="rsvpBackground" className="text-purple-700">Background Image</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                id="rsvpBackground"
+                value={formData.backgroundImage || ''}
+                onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
+                placeholder="Enter image URL or upload below"
+                className="border-purple-200 focus:border-purple-400"
+              />
+            </div>
+            <div className="mt-2">
+              <Label htmlFor="rsvpImageUpload" className="cursor-pointer">
+                <div className="border-2 border-dashed border-purple-300 rounded-lg p-4 text-center hover:border-purple-400 transition-colors">
+                  <Upload className="mx-auto h-8 w-8 text-purple-400 mb-2" />
+                  <p className="text-sm text-purple-600">
+                    {isUploading ? 'Uploading...' : 'Click to upload RSVP background image'}
+                  </p>
+                </div>
+                <input
+                  id="rsvpImageUpload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(file);
+                  }}
+                  disabled={isUploading}
+                />
+              </Label>
+            </div>
             <p className="text-sm text-purple-600 mt-1">Leave empty to use the default floral background</p>
+          </div>
+
+          <div>
+            <Label htmlFor="coupleNames" className="text-purple-700">Couple Names (auto-filled from home page)</Label>
+            <Input
+              id="coupleNames"
+              value={formData.coupleNames || homeData.coupleNames}
+              onChange={(e) => setFormData({ ...formData, coupleNames: e.target.value })}
+              placeholder="e.g., John & Jane"
+              className="border-purple-200 focus:border-purple-400 bg-gray-50"
+            />
+            <p className="text-sm text-purple-600 mt-1">This is automatically filled from the home page couple names</p>
           </div>
         </CardContent>
       </Card>

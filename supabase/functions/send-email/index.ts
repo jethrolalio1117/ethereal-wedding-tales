@@ -28,6 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sending request:", {
       to: to.length > 0 ? `${to.length} recipients` : 'No recipients',
+      recipients: to, // Log actual emails for debugging
       subject,
       message: message.substring(0, 100) + "...",
       recipientType,
@@ -69,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
     let errorCount = 0;
     const errors: string[] = [];
 
-    // Send emails to all recipients
+    // Send emails to all recipients individually
     for (const emailAddress of to) {
       try {
         console.log(`Sending email to: ${emailAddress}`);
@@ -84,15 +85,26 @@ const handler = async (req: Request): Promise<Response> => {
           .replace(/liam-mia-wedding\.lovable\.app/g, websiteUrl || 'your-wedding-website.com')
           .replace(/Liam & Mia/g, coupleNames || 'Wedding Couple');
         
+        // Create the sender email with couple names
+        const fromEmail = `${coupleNames || 'Wedding Couple'} <noreply@resend.dev>`;
+        
         const emailResponse = await resend.emails.send({
-          from: `${coupleNames || 'Wedding Couple'} <noreply@resend.dev>`,
-          to: [emailAddress],
+          from: fromEmail,
+          to: [emailAddress], // Send to one recipient at a time
           subject,
           html: personalizedMessage.replace(/\n/g, '<br>'),
         });
 
+        if (emailResponse.error) {
+          throw new Error(emailResponse.error.message || 'Unknown error from Resend');
+        }
+
         console.log(`Email sent successfully to ${emailAddress}:`, emailResponse);
         successCount++;
+        
+        // Add a small delay between emails to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
       } catch (error: any) {
         console.error(`Failed to send email to ${emailAddress}:`, error);
         errorCount++;

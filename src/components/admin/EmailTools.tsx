@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Send, Users, UserCheck, UserX, AlertCircle, Heart, Flower2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Send, Users, UserCheck, UserX, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useHomePageData } from '@/hooks/useHomePageData';
@@ -16,11 +15,13 @@ interface Guest {
   id: string;
   name: string;
   email: string;
-  attending?: boolean | null;
-  guest_count?: number;
+  attending: boolean;
+  guest_count: number;
 }
 
 const EmailTools: React.FC = () => {
+  const { toast } = useToast();
+  const { data: homeData } = useHomePageData();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -28,36 +29,40 @@ const EmailTools: React.FC = () => {
   const [subject, setSubject] = useState('Important Update About Our Wedding!');
   const [message, setMessage] = useState(`Dear {name},
 
-We hope this message finds you well! We wanted to reach out with some important updates about our upcoming wedding celebration.
+We hope this message finds you well! We wanted to reach out with some important updates regarding our upcoming wedding celebration.
 
-Please visit our wedding website at {website_url} for the latest information, including venue details, schedule updates, and more.
+We're so excited to celebrate this special day with you and can't wait to see you there! If you have any questions or need any additional information, please don't hesitate to reach out to us.
 
-We're so excited to celebrate this special day with you and can't wait to see you there!
+You can visit our wedding website for the latest updates and information: {website_url}
 
-With love and gratitude,
-{couple_names}`);
-  const { toast } = useToast();
-  const { data: homeData } = useHomePageData();
+With love and excitement,
+${homeData.coupleNames || 'The Happy Couple'}`);
 
   useEffect(() => {
     fetchGuests();
   }, []);
+
+  // Update message when homeData changes
+  useEffect(() => {
+    if (homeData.coupleNames) {
+      setMessage(prev => prev.replace(/The Happy Couple$/, homeData.coupleNames));
+    }
+  }, [homeData.coupleNames]);
 
   const fetchGuests = async () => {
     try {
       const { data, error } = await supabase
         .from('guests')
         .select('*')
-        .order('name');
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      console.log('Fetched guests:', data);
       setGuests(data || []);
     } catch (error) {
       console.error('Error fetching guests:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch guests",
+        description: "Failed to load guest list.",
         variant: "destructive",
       });
     } finally {
@@ -65,65 +70,49 @@ With love and gratitude,
     }
   };
 
-  const getFilteredGuests = (): Guest[] => {
-    console.log('All guests:', guests);
-    console.log('Filtering by type:', recipientType);
-    
-    let filtered: Guest[] = [];
-    
+  const getRecipients = () => {
     switch (recipientType) {
       case 'confirmed':
-        filtered = guests.filter(guest => guest.attending === true);
-        break;
+        return guests.filter(guest => guest.attending);
       case 'declined':
-        filtered = guests.filter(guest => guest.attending === false);
-        break;
-      case 'pending':
-        filtered = guests.filter(guest => guest.attending === null || guest.attending === undefined);
-        break;
+        return guests.filter(guest => !guest.attending);
       default:
-        filtered = guests;
+        return guests;
     }
-    
-    console.log('Filtered guests:', filtered);
-    return filtered;
   };
 
-  const handleSendEmails = async () => {
-    if (!subject.trim() || !message.trim()) {
+  const sendEmails = async () => {
+    const recipients = getRecipients();
+    
+    if (recipients.length === 0) {
       toast({
-        title: "Missing information",
-        description: "Please provide both subject and message",
+        title: "No Recipients",
+        description: "No guests found for the selected recipient type.",
         variant: "destructive",
       });
       return;
     }
 
-    const recipientGuests = getFilteredGuests();
-    
-    if (recipientGuests.length === 0) {
+    if (!subject.trim() || !message.trim()) {
       toast({
-        title: "No recipients",
-        description: "No guests match the selected criteria",
+        title: "Missing Content",
+        description: "Please provide both subject and message.",
         variant: "destructive",
       });
       return;
     }
 
     setSending(true);
+
     try {
-      // Prepare recipient emails and names
-      const recipientEmails = recipientGuests.map(guest => guest.email);
-      const guestNames = recipientGuests.reduce((acc, guest) => {
+      const recipientEmails = recipients.map(guest => guest.email);
+      const guestNames = recipients.reduce((acc, guest) => {
         acc[guest.email] = guest.name;
         return acc;
       }, {} as { [email: string]: string });
 
-      console.log('Sending emails to:', recipientEmails);
-      console.log('Guest names mapping:', guestNames);
-
-      const websiteUrl = window.location.origin;
-      const coupleNames = homeData.coupleNames || 'Wedding Couple';
+      console.log('Sending to recipients:', recipientEmails);
+      console.log('With guest names:', guestNames);
 
       const response = await supabase.functions.invoke('send-email', {
         body: {
@@ -131,10 +120,10 @@ With love and gratitude,
           subject,
           message,
           recipientType,
-          coupleNames,
-          websiteUrl,
-          guestNames,
-        },
+          coupleNames: homeData.coupleNames || 'Wedding Couple',
+          websiteUrl: window.location.origin,
+          guestNames
+        }
       });
 
       if (response.error) {
@@ -145,34 +134,24 @@ With love and gratitude,
       
       if (result.success) {
         toast({
-          title: "Success!",
+          title: "Emails Sent Successfully!",
           description: result.message,
+          duration: 5000,
         });
-        
-        // Clear form
-        setSubject('Important Update About Our Wedding!');
-        setMessage(`Dear {name},
-
-We hope this message finds you well! We wanted to reach out with some important updates about our upcoming wedding celebration.
-
-Please visit our wedding website at {website_url} for the latest information, including venue details, schedule updates, and more.
-
-We're so excited to celebrate this special day with you and can't wait to see you there!
-
-With love and gratitude,
-{couple_names}`);
       } else {
         toast({
           title: "Partial Success",
           description: result.message,
           variant: "destructive",
+          duration: 7000,
         });
       }
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Error sending emails:', error);
       toast({
-        title: "Error",
-        description: "Failed to send emails",
+        title: "Failed to Send Emails",
+        description: error.message || "There was an error sending the emails. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -180,169 +159,112 @@ With love and gratitude,
     }
   };
 
-  const getRecipientTypeLabel = (type: string): string => {
-    switch (type) {
-      case 'confirmed': return 'Confirmed Guests';
-      case 'declined': return 'Declined Guests';
-      case 'pending': return 'Pending RSVPs';
-      default: return 'All Guests';
-    }
-  };
-
-  const filteredGuests = getFilteredGuests();
+  const recipients = getRecipients();
 
   if (loading) {
     return (
-      <div className="text-center py-8">
-        <Mail className="text-primary mx-auto mb-4 animate-pulse" size={48} />
-        <p className="text-purple-600">Loading email tools...</p>
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 relative">
-      {/* Floating floral decorations */}
-      <div className="absolute top-0 right-0 text-pink-200 opacity-20 animate-pulse">
-        <Flower2 size={60} />
-      </div>
-      <div className="absolute bottom-0 left-0 text-purple-200 opacity-15 animate-bounce">
-        <Heart size={40} />
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-playfair text-purple-800">Email Communication</h2>
+        <p className="text-purple-600">Send updates and messages to your guests</p>
       </div>
 
-      <Card className="bg-white/90 backdrop-blur-sm border-pink-200 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-pink-50 to-purple-50 border-b border-pink-200">
-          <CardTitle className="flex items-center gap-2 text-pink-800 font-playfair">
-            <Mail className="text-pink-600" />
-            Email Communication Center
+      <Card className="border-purple-200">
+        <CardHeader>
+          <CardTitle className="flex items-center text-purple-800">
+            <Send className="mr-2 h-5 w-5" />
+            Send Email to Guests
           </CardTitle>
-          <p className="text-sm text-purple-600">Send personalized emails to your wedding guests</p>
+          <CardDescription>Compose and send emails to your wedding guests</CardDescription>
         </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          {/* Guest Statistics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-              <Users className="mx-auto mb-2 text-blue-600" size={24} />
-              <div className="text-lg font-semibold text-blue-800">{guests.length}</div>
-              <div className="text-xs text-blue-600">Total Guests</div>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-              <UserCheck className="mx-auto mb-2 text-green-600" size={24} />
-              <div className="text-lg font-semibold text-green-800">
-                {guests.filter(g => g.attending === true).length}
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-purple-700 font-medium">Select Recipients</Label>
+            <RadioGroup value={recipientType} onValueChange={setRecipientType} className="mt-2">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="all" id="all" />
+                <Label htmlFor="all" className="flex items-center">
+                  <Users className="mr-1 h-4 w-4" />
+                  All Guests ({guests.length})
+                </Label>
               </div>
-              <div className="text-xs text-green-600">Confirmed</div>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
-              <UserX className="mx-auto mb-2 text-red-600" size={24} />
-              <div className="text-lg font-semibold text-red-800">
-                {guests.filter(g => g.attending === false).length}
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="confirmed" id="confirmed" />
+                <Label htmlFor="confirmed" className="flex items-center">
+                  <UserCheck className="mr-1 h-4 w-4" />
+                  Confirmed Attendees ({guests.filter(g => g.attending).length})
+                </Label>
               </div>
-              <div className="text-xs text-red-600">Declined</div>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200">
-              <AlertCircle className="mx-auto mb-2 text-yellow-600" size={24} />
-              <div className="text-lg font-semibold text-yellow-800">
-                {guests.filter(g => g.attending === null || g.attending === undefined).length}
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="declined" id="declined" />
+                <Label htmlFor="declined" className="flex items-center">
+                  <UserX className="mr-1 h-4 w-4" />
+                  Declined ({guests.filter(g => !g.attending).length})
+                </Label>
               </div>
-              <div className="text-xs text-yellow-600">Pending</div>
-            </div>
+            </RadioGroup>
           </div>
 
-          <Separator className="bg-pink-200" />
-
-          {/* Email Composition */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-pink-700 mb-2">
-                Send to
-              </label>
-              <Select value={recipientType} onValueChange={setRecipientType}>
-                <SelectTrigger className="border-pink-300 focus:border-pink-500 focus:ring-pink-200">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Guests ({guests.length})</SelectItem>
-                  <SelectItem value="confirmed">
-                    Confirmed Guests ({guests.filter(g => g.attending === true).length})
-                  </SelectItem>
-                  <SelectItem value="declined">
-                    Declined Guests ({guests.filter(g => g.attending === false).length})
-                  </SelectItem>
-                  <SelectItem value="pending">
-                    Pending RSVPs ({guests.filter(g => g.attending === null || g.attending === undefined).length})
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Recipients Preview */}
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                  {getRecipientTypeLabel(recipientType)}
-                </Badge>
-                <span className="text-sm text-purple-600">
-                  {filteredGuests.length} recipient{filteredGuests.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-              {filteredGuests.length > 0 && (
-                <div className="text-xs text-purple-600 max-h-20 overflow-y-auto">
-                  {filteredGuests.map(guest => guest.name).join(', ')}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-pink-700 mb-2">
-                Subject
-              </label>
-              <Input
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Email subject"
-                className="border-pink-300 focus:border-pink-500 focus:ring-pink-200"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-pink-700 mb-2">
-                Message
-              </label>
-              <Textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Write your message here. Use {name} to personalize with guest names, {website_url} for your website link, and {couple_names} for the couple's names."
-                className="border-pink-300 focus:border-pink-500 focus:ring-pink-200 min-h-[200px]"
-              />
-              <div className="text-xs text-purple-600 mt-1">
-                <strong>Personalization tips:</strong>
-                <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>Use <code className="bg-purple-100 px-1 rounded">{'{name}'}</code> to insert the guest's name</li>
-                  <li>Use <code className="bg-purple-100 px-1 rounded">{'{website_url}'}</code> to insert your website link</li>
-                  <li>Use <code className="bg-purple-100 px-1 rounded">{'{couple_names}'}</code> to insert the couple's names</li>
-                </ul>
-              </div>
-            </div>
-
-            <Button
-              onClick={handleSendEmails}
-              disabled={sending || !subject.trim() || !message.trim() || filteredGuests.length === 0}
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg"
-            >
-              {sending ? (
-                <>
-                  <Send className="mr-2 animate-spin" size={18} />
-                  Sending to {filteredGuests.length} guest{filteredGuests.length !== 1 ? 's' : ''}...
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2" size={18} />
-                  Send Email to {filteredGuests.length} Guest{filteredGuests.length !== 1 ? 's' : ''}
-                </>
-              )}
-            </Button>
+          <div>
+            <Label htmlFor="subject" className="text-purple-700">Subject</Label>
+            <Input
+              id="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Enter email subject"
+              className="border-purple-200 focus:border-purple-400"
+            />
           </div>
+
+          <div>
+            <Label htmlFor="message" className="text-purple-700">Message</Label>
+            <Textarea
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Enter your message..."
+              rows={10}
+              className="border-purple-200 focus:border-purple-400"
+            />
+            <p className="text-sm text-purple-600 mt-1">
+              Use {"{name}"} to personalize with guest names and {"{website_url}"} for your website link
+            </p>
+          </div>
+
+          <div className="bg-purple-50 p-4 rounded-lg">
+            <h4 className="font-medium text-purple-800 mb-2">Email Preview</h4>
+            <p className="text-sm text-purple-700">
+              Sending to <strong>{recipients.length}</strong> recipient(s)
+            </p>
+            <p className="text-sm text-purple-600 mt-1">
+              From: {homeData.coupleNames || 'Wedding Couple'}
+            </p>
+          </div>
+
+          <Button 
+            onClick={sendEmails} 
+            disabled={sending || recipients.length === 0}
+            className="w-full bg-purple-600 hover:bg-purple-700"
+          >
+            {sending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending Emails...
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Send Email to {recipients.length} Recipient(s)
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>

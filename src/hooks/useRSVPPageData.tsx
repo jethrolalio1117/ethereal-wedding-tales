@@ -6,13 +6,15 @@ interface RSVPPageData {
   subtitle: string;
   deadline: string;
   backgroundImage?: string;
+  coupleNames?: string;
 }
 
 const defaultRSVPData: RSVPPageData = {
   title: "Kindly RSVP",
   subtitle: "We'd love for you to join us!",
   deadline: "Please respond by August 15th, 2025.",
-  backgroundImage: ""
+  backgroundImage: "",
+  coupleNames: ""
 };
 
 export const useRSVPPageData = () => {

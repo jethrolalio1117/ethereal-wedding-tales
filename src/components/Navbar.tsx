@@ -16,24 +16,42 @@ const Navbar: React.FC = () => {
 
   // Load couple names from localStorage and create logo
   useEffect(() => {
-    const storedData = localStorage.getItem('homePageData');
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData);
-        if (parsedData.coupleNames) {
-          // Extract initials from couple names (e.g., "Liam & Mia" -> "L & M")
-          const names = parsedData.coupleNames.split(' & ');
-          if (names.length === 2) {
-            const initials = `${names[0].charAt(0)} & ${names[1].charAt(0)}`;
-            setCoupleNames(initials);
-          } else {
-            setCoupleNames(parsedData.coupleNames);
+    const updateCoupleNames = () => {
+      const storedData = localStorage.getItem('homePageData');
+      if (storedData) {
+        try {
+          const parsedData = JSON.parse(storedData);
+          if (parsedData.coupleNames) {
+            // Extract initials from couple names (e.g., "Liam & Mia" -> "L & M")
+            const names = parsedData.coupleNames.split(' & ');
+            if (names.length === 2) {
+              const initials = `${names[0].charAt(0)} & ${names[1].charAt(0)}`;
+              setCoupleNames(initials);
+            } else {
+              setCoupleNames(parsedData.coupleNames);
+            }
           }
+        } catch (error) {
+          console.error('Error parsing stored home data:', error);
         }
-      } catch (error) {
-        console.error('Error parsing stored home data:', error);
       }
-    }
+    };
+
+    // Initial load
+    updateCoupleNames();
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'homePageData') {
+        updateCoupleNames();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   return (
