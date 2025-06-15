@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useRSVPPageData } from '@/hooks/useRSVPPageData';
+import { useSectionInView } from '@/hooks/useSectionInView';
 
 const RSVPSection = () => {
   const { data: rsvpData } = useRSVPPageData();
@@ -18,6 +19,7 @@ const RSVPSection = () => {
   const [dietary, setDietary] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sectionRef, inView] = useSectionInView();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +73,12 @@ const RSVPSection = () => {
   };
 
   return (
-    <div className="animate-fade-in-up">
+    <div
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
+      className={`animate-fade-in-up transition-all duration-1000 ${
+        inView ? "confetti-explode" : ""
+      }`}
+    >
       {/* Everything from the original RSVPPage component body, but within this section */}
       {/* Enhanced Background with Florals */}
       <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
@@ -105,6 +112,29 @@ const RSVPSection = () => {
           <div className="w-5 h-5 bg-pink-400 rounded-full animate-pulse"></div>
         </div>
       </div>
+
+      {inView && (
+        <div className="absolute inset-0 pointer-events-none z-10">
+          {[...Array(18)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${6 + Math.random() * 12}px`,
+                height: `${6 + Math.random() * 12}px`,
+                borderRadius: "50%",
+                background: ["#f8bbd0", "#d1b1ff", "#fdba74", "#bbf7d0"][i % 4],
+                opacity: 0.7,
+                filter: "blur(0.5px)",
+                animation: "confetti-fall 2s linear",
+                animationDelay: `${i * 0.07}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-sm p-8 md:p-12 rounded-3xl shadow-2xl border border-pink-200 relative z-10">
         <div className="text-center mb-10">

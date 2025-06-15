@@ -172,28 +172,37 @@
     50% { transform: scale(1.05) rotate(2deg); opacity: 1; }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
   }
-
   .bloom-animation {
-    animation: bloom 2s ease-out forwards;
+    animation: bloom 1.5s cubic-bezier(0.66,0,0.44,1) 1;
   }
 
-  @keyframes sparkle {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.2); }
+  @keyframes heart-pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 #f472b6); }
+    30% { transform: scale(1.25); filter: drop-shadow(0 0 16px #f472b6); }
+    60% { transform: scale(1.1); filter: drop-shadow(0 0 8px #d1b1ff); }
+  }
+  .animate-heart-pulse {
+    animation: heart-pulse 1.6s ease-out 1;
   }
 
-  .sparkle {
-    animation: sparkle 3s ease-in-out infinite;
+  @keyframes photo-shimmer {
+    0% { box-shadow: 0 0 0 0 transparent; }
+    40% { box-shadow: 0 0 40px 4px #d1b1ff80; }
+    80% { box-shadow: 0 0 60px 12px #f8bbd040; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  .animate-photo-shimmer {
+    animation: photo-shimmer 1.3s cubic-bezier(0.66,0,0.44,1) 1;
   }
 
-  @keyframes shimmer {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
+  .gallery-glow {
+    box-shadow: 0 0 60px 0 #f8bbd055, 0 4px 40px 0 #d1b1ff22;
   }
 
-  .shimmer {
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
+  @keyframes confetti-fall {
+    0% { transform: translateY(-60px) scale(1.2) rotate(0deg);}
+    65% { transform: translateY(45vh) scale(1) rotate(165deg);}
+    100% { transform: translateY(95vh) scale(0.95) rotate(359deg);}
   }
+  .confetti-explode { z-index: 5; }
 }

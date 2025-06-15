@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSectionInView } from '@/hooks/useSectionInView';
 
 interface GalleryImage {
   id: string;
@@ -15,6 +16,7 @@ interface GalleryImage {
 const GallerySection: React.FC = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sectionRef, inView] = useSectionInView();
 
   useEffect(() => {
     fetchImages();
@@ -54,7 +56,12 @@ const GallerySection: React.FC = () => {
   }
 
   return (
-    <div className="py-12 animate-fade-in-up">
+    <div
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
+      className={`py-12 animate-fade-in-up transition-all duration-1000 ${
+        inView ? "gallery-glow" : ""
+      }`}
+    >
       <div className="text-center mb-12">
         <Camera className="text-primary mx-auto mb-4" size={64} strokeWidth={1.5} />
         <h1 className="text-4xl md:text-5xl font-playfair text-primary mb-4">Our Cherished Moments</h1>
@@ -70,7 +77,9 @@ const GallerySection: React.FC = () => {
             <img
               src={image.image_url}
               alt={image.title}
-              className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
+              className={`w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110 ${
+                inView ? "animate-photo-shimmer" : ""
+              }`}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = 'https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';

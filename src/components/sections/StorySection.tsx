@@ -1,16 +1,44 @@
 import { Heart, Flower2 } from 'lucide-react';
 import { useHomePageData } from '@/hooks/useHomePageData';
+import { useSectionInView } from '@/hooks/useSectionInView';
 
 const StorySection = () => {
   const { data } = useHomePageData();
+  const [sectionRef, inView] = useSectionInView();
 
   return (
-    <div className="py-24 bg-gradient-to-br from-pink-50 via-white to-purple-50 relative overflow-hidden animate-fade-in-up">
+    <div
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
+      className={`py-24 bg-gradient-to-br from-pink-50 via-white to-purple-50 relative overflow-hidden transition-all duration-1000 ${
+        inView ? "animate-heart-pulse" : ""
+      }`}
+    >
       {/* Background Florals */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-10 text-pink-400"><Flower2 size={200} /></div>
         <div className="absolute bottom-20 right-10 text-purple-400"><Flower2 size={150} /></div>
       </div>
+      {/* Animated decorative hearts */}
+      {inView && (
+        <div className="absolute inset-0 pointer-events-none z-10">
+          {[1,2,3,4].map((v,i)=>(
+            <Heart
+              key={i}
+              className="absolute pulse"
+              style={{
+                left: `${15 + i * 20}%`,
+                top: `${30 + i * 8}%`,
+                opacity: 0.22 + i * 0.1,
+                color: i%2 ? "#f472b6" : "#d1b1ff",
+                animationDelay: `${i * 0.3}s`,
+                zIndex: 1,
+              }}
+              size={32 + i*5}
+              strokeWidth={1.1}
+            />
+          ))}
+        </div>
+      )}
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
           <div className="flex items-center justify-center mb-6">
