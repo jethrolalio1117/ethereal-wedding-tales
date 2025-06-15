@@ -98,22 +98,36 @@ const handler = async (req: Request): Promise<Response> => {
           console.log(`After website URL replacement: ${personalizedMessage.substring(0, 50)}...`);
         }
         
-        // Replace any remaining old references with current couple names and website
+        // COMPREHENSIVE replacement of couple names in all parts of the message
         if (coupleNames) {
-          console.log(`Replacing couple names with: ${coupleNames}`);
+          console.log(`Replacing all couple name references with: ${coupleNames}`);
           
-          // Replace old couple name references (case insensitive)
+          // Replace various couple name formats (case insensitive)
           personalizedMessage = personalizedMessage.replace(/Liam\s*&\s*Mia/gi, coupleNames);
           personalizedMessage = personalizedMessage.replace(/Liam\s*and\s*Mia/gi, coupleNames.replace(' & ', ' and '));
+          personalizedMessage = personalizedMessage.replace(/Liam\s*\+\s*Mia/gi, coupleNames.replace(' & ', ' + '));
+          
+          // Replace in URL paths and parameters (more comprehensive)
+          personalizedMessage = personalizedMessage.replace(/liam-mia/gi, coupleNames.toLowerCase().replace(' & ', '-').replace(' and ', '-'));
+          personalizedMessage = personalizedMessage.replace(/liam_mia/gi, coupleNames.toLowerCase().replace(' & ', '_').replace(' and ', '_'));
           
           console.log(`After couple name replacement: ${personalizedMessage.substring(0, 100)}...`);
         }
         
+        // COMPREHENSIVE domain/URL replacement
         if (websiteUrl) {
-          // Replace old domain references
           const cleanWebsiteUrl = websiteUrl.replace(/^https?:\/\//, '');
+          console.log(`Replacing domains with: ${cleanWebsiteUrl}`);
+          
+          // Replace all possible old domain references
           personalizedMessage = personalizedMessage.replace(/liam-mia-wedding\.lovable\.app/gi, cleanWebsiteUrl);
           personalizedMessage = personalizedMessage.replace(/preview--ethereal-wedding-tales\.lovable\.app/gi, cleanWebsiteUrl);
+          personalizedMessage = personalizedMessage.replace(/ethereal-wedding-tales\.lovable\.app/gi, cleanWebsiteUrl);
+          
+          // Replace any full URLs that might contain old domains
+          personalizedMessage = personalizedMessage.replace(/https?:\/\/liam-mia-wedding\.lovable\.app/gi, websiteUrl);
+          personalizedMessage = personalizedMessage.replace(/https?:\/\/preview--ethereal-wedding-tales\.lovable\.app/gi, websiteUrl);
+          personalizedMessage = personalizedMessage.replace(/https?:\/\/ethereal-wedding-tales\.lovable\.app/gi, websiteUrl);
           
           console.log(`After domain replacement: ${personalizedMessage.substring(0, 100)}...`);
         }
