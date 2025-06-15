@@ -3,13 +3,21 @@ import { useHomePageData } from '@/hooks/useHomePageData';
 import { useSectionInView } from '@/hooks/useSectionInView';
 import React from 'react';
 
-const DEFAULT_HERO_IMAGE = "https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80";
+const DEFAULT_HERO_IMAGE =
+  "https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80";
 
 const HomeSection = () => {
   const { data, loading } = useHomePageData();
   const [sectionRef, inView] = useSectionInView();
 
-  const bgImage = data.backgroundImage && data.backgroundImage !== "" ? data.backgroundImage : DEFAULT_HERO_IMAGE;
+  // Improved: Always use fallback if backgroundImage is missing/empty/null/undefined
+  let bgImage = data && typeof data.backgroundImage === "string" && data.backgroundImage.trim() !== ""
+    ? data.backgroundImage
+    : DEFAULT_HERO_IMAGE;
+
+  // If image is broken, fallback again (for failed loads)
+  const [imgBroken, setImgBroken] = React.useState(false);
+  const imgToUse = !imgBroken ? bgImage : DEFAULT_HERO_IMAGE;
 
   if (loading) {
     return (
@@ -22,11 +30,25 @@ const HomeSection = () => {
   return (
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
-      style={{ backgroundImage: `url(${bgImage})` }}
-      className={`min-h-screen bg-cover bg-center bg-fixed relative overflow-hidden transition-all duration-1000 ${
+      style={{
+        backgroundImage: `url(${imgToUse})`,
+        backgroundColor: '#fff6f9',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+      className={`min-h-screen bg-cover bg-center bg-fixed relative overflow-hidden transition-all duration-500 ${
         inView ? "animate-fade-in-up" : ""
       }`}
     >
+      {/* Preload (hidden) to check for broken image */}
+      <img
+        src={bgImage}
+        alt="Preload check"
+        style={{ display: "none" }}
+        onError={() => setImgBroken(true)}
+      />
       {/* Floating Floral Elements and overlays */}
       <div className="absolute inset-0 pointer-events-none z-10">
         {/* ... keep floral icon overlays ... */}

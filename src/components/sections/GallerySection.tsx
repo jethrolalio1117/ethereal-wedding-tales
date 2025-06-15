@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,14 +39,18 @@ const GallerySection: React.FC = () => {
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) throw error;
-      setImages(data || []);
+      // Use fallback images if error, empty, or all images are missing links
+      if (error || !data || data.length === 0 || data.every(img => !img.image_url)) throw error;
+      setImages(data);
     } catch (error) {
       setImages(FALLBACK_IMAGES);
     } finally {
       setLoading(false);
     }
   };
+
+  // Defensive render: if no valid images, fallback to FALLBACK_IMAGES
+  const validImages = images && images.length > 0 ? images : FALLBACK_IMAGES;
 
   if (loading) {
     return (
@@ -61,7 +64,7 @@ const GallerySection: React.FC = () => {
   return (
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
-      className={`py-12 transition-all duration-1000 relative ${inView ? "animate-fade-in-up" : ""}`}
+      className={`py-12 transition-all duration-500 relative ${inView ? "animate-fade-in-up" : ""}`}
     >
       <div className="text-center mb-12">
         <Camera className={`text-primary mx-auto mb-4 ${inView ? "animate-fade-in-up" : ""}`} size={64} strokeWidth={1.5} />
@@ -69,16 +72,16 @@ const GallerySection: React.FC = () => {
         <div className="w-24 h-1 bg-secondary mx-auto rounded-full"></div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-        {images.map((image, index) => (
+        {validImages.map((image, index) => (
           <div
             key={image.id}
-            className={`group relative overflow-hidden rounded-lg shadow-xl aspect-w-1 aspect-h-1 opacity-0`}
+            className="group relative overflow-hidden rounded-lg shadow-xl aspect-w-1 aspect-h-1 opacity-0"
             style={inView ? { animation: `fade-in-up 0.5s forwards`, animationDelay: `${0.2 + index * 0.13}s` } : {}}
           >
             <img
-              src={image.image_url}
+              src={image.image_url || "https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"}
               alt={image.title}
-              className={`w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110`}
+              className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = 'https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
@@ -93,7 +96,7 @@ const GallerySection: React.FC = () => {
           </div>
         ))}
       </div>
-      {images.length === 0 && (
+      {validImages.length === 0 && (
         <div className="text-center py-8 text-purple-600">
           <Camera className="mx-auto mb-4" size={48} />
           <p>No images available yet. Check back soon!</p>
@@ -102,4 +105,5 @@ const GallerySection: React.FC = () => {
     </div>
   );
 };
+
 export default GallerySection;
