@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,12 +59,12 @@ const GallerySection: React.FC = () => {
   return (
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
-      className={`py-12 animate-fade-in-up transition-all duration-1000 ${
-        inView ? "gallery-glow" : ""
+      className={`py-12 transition-all duration-1000 relative ${
+        inView ? "gallery-drop-entrance" : ""
       }`}
     >
       <div className="text-center mb-12">
-        <Camera className="text-primary mx-auto mb-4" size={64} strokeWidth={1.5} />
+        <Camera className={`text-primary mx-auto mb-4 ${inView ? "animate-cam-wiggle" : ""}`} size={64} strokeWidth={1.5} />
         <h1 className="text-4xl md:text-5xl font-playfair text-primary mb-4">Our Cherished Moments</h1>
         <div className="w-24 h-1 bg-secondary mx-auto rounded-full"></div>
       </div>
@@ -71,15 +72,17 @@ const GallerySection: React.FC = () => {
         {images.map((image, index) => (
           <div
             key={image.id}
-            className="group relative overflow-hidden rounded-lg shadow-xl aspect-w-1 aspect-h-1 animate-fade-in-up opacity-0"
-            style={{ animationDelay: `${0.3 + index * 0.1}s`, animationFillMode: 'forwards' }}
+            className={`group relative overflow-hidden rounded-lg shadow-xl aspect-w-1 aspect-h-1
+                        gallery-drop animate-photo-shimmer opacity-0`}
+            style={{
+              animationDelay: inView ? `${0.2 + index * 0.13}s` : undefined,
+              animationFillMode: 'forwards'
+            }}
           >
             <img
               src={image.image_url}
               alt={image.title}
-              className={`w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110 ${
-                inView ? "animate-photo-shimmer" : ""
-              }`}
+              className={`w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110`}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = 'https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';

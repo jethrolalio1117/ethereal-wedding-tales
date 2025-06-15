@@ -75,11 +75,34 @@ const RSVPSection = () => {
   return (
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
-      className={`animate-fade-in-up transition-all duration-1000 ${
+      className={`animate-fade-in-up transition-all duration-1000 relative ${
         inView ? "confetti-explode" : ""
       }`}
     >
-      {/* Everything from the original RSVPPage component body, but within this section */}
+      {/* Animated confetti AND envelope shake on entrance */}
+      {inView && (
+        <div className="absolute inset-0 pointer-events-none z-20">
+          {[...Array(18)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${6 + Math.random() * 12}px`,
+                height: `${6 + Math.random() * 12}px`,
+                borderRadius: "50%",
+                background: ["#f8bbd0", "#d1b1ff", "#fdba74", "#bbf7d0"][i % 4],
+                opacity: 0.7,
+                filter: "blur(0.5px)",
+                animation: "confetti-fall 2s linear",
+                animationDelay: `${i * 0.07}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Enhanced Background with Florals */}
       <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
         {rsvpData.backgroundImage && (
@@ -88,7 +111,7 @@ const RSVPSection = () => {
             style={{ backgroundImage: `url(${rsvpData.backgroundImage})` }}
           />
         )}
-        {/* ... keep floating florals and petals ... */}
+        {/* Floating florals and petals */}
         <div className="absolute top-10 left-10 text-pink-300 opacity-20 animate-pulse">
           <Flower2 size={80} className="animate-bounce" />
         </div>
@@ -113,33 +136,10 @@ const RSVPSection = () => {
         </div>
       </div>
 
-      {inView && (
-        <div className="absolute inset-0 pointer-events-none z-10">
-          {[...Array(18)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                width: `${6 + Math.random() * 12}px`,
-                height: `${6 + Math.random() * 12}px`,
-                borderRadius: "50%",
-                background: ["#f8bbd0", "#d1b1ff", "#fdba74", "#bbf7d0"][i % 4],
-                opacity: 0.7,
-                filter: "blur(0.5px)",
-                animation: "confetti-fall 2s linear",
-                animationDelay: `${i * 0.07}s`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-
       <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-sm p-8 md:p-12 rounded-3xl shadow-2xl border border-pink-200 relative z-10">
         <div className="text-center mb-10">
           <div className="relative">
-            <MailCheck className="text-primary mx-auto mb-4 animate-pulse" size={64} strokeWidth={1.5} />
+            <MailCheck className={`text-primary mx-auto mb-4 animate-pulse ${inView ? 'envelope-shake' : ''}`} size={64} strokeWidth={1.5} />
             <div className="absolute -top-2 -right-2 text-pink-300 opacity-60">
               <Flower2 size={32} />
             </div>

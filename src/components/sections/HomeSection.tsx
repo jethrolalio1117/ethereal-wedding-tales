@@ -1,4 +1,3 @@
-
 import { Flower2, Calendar, MapPin } from 'lucide-react';
 import { useHomePageData } from '@/hooks/useHomePageData';
 import { useSectionInView } from '@/hooks/useSectionInView';
@@ -20,16 +19,39 @@ const HomeSection = () => {
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
       className={`min-h-screen bg-cover bg-center bg-fixed relative overflow-hidden transition-all duration-1000 ${
-        inView ? "bloom-animation" : ""
+        inView ? "petal-burst" : ""
       }`}
     >
+      {/* Animated Petal Burst Overlay */}
+      {inView && (
+        <div className="absolute inset-0 pointer-events-none z-30">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute petal-burst-petal"
+              style={{
+                left: '50%',
+                top: '50%',
+                width: `${18 + Math.random()*22}px`,
+                height: `${18 + Math.random()*24}px`,
+                background: `radial-gradient(circle, #f8bbd0 ${60+Math.random()*20}%, transparent 100%)`,
+                borderRadius: "9999px",
+                opacity: 0.20 + Math.random()*0.25,
+                transform: `translate(-50%, -50%) rotate(${i*30}deg) scale(0.7)`
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Floating Floral Elements and overlays */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none z-10">
+        {/* ... keep floral icon overlays ... */}
         <div className="absolute top-10 left-10 text-pink-300 opacity-30 animate-pulse"><Flower2 size={80} className="animate-bounce" /></div>
         <div className="absolute top-32 right-20 text-purple-300 opacity-25 animate-pulse delay-1000"><Flower2 size={60} className="animate-float" /></div>
         <div className="absolute bottom-32 left-16 text-pink-400 opacity-20 animate-pulse delay-2000"><Flower2 size={70} className="animate-bounce" /></div>
         <div className="absolute bottom-20 right-32 text-purple-400 opacity-30 animate-pulse delay-500"><Flower2 size={50} className="animate-float" /></div>
-        {/* Sparkle petals for creative effect */}
+        {/* Sparkle petals */}
         {inView && (
           <div className="absolute inset-0 pointer-events-none z-10">
             {[...Array(10)].map((_, i) => (
@@ -58,6 +80,7 @@ const HomeSection = () => {
       <div className="absolute inset-0 bg-black bg-opacity-20"></div>
       <div className="relative z-10 flex items-center justify-center min-h-screen text-center text-white px-4">
         <div className="max-w-4xl mx-auto animate-fade-in-up opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
+          {/* ... keep heading, names, date, details ... */}
           <div className="mb-8 relative">
             <Flower2 className="text-white/80 mx-auto mb-6 animate-pulse" size={64} strokeWidth={1} />
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-playfair mb-4 tracking-wide leading-tight">{data.coupleNames}</h1>
