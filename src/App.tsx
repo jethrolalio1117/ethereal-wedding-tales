@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,9 +22,11 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {/* Single route for whole single-page app */}
         <BrowserRouter>
           <Routes>
+            {/* Auth page takes priority on /auth */}
+            <Route path="/auth" element={<AuthPage />} />
+            {/* All other routes get the main layout */}
             <Route path="*" element={
               <Layout>
                 <Index />
