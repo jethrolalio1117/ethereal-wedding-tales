@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -41,7 +40,7 @@ const AdminPage: React.FC = () => {
   // Redirect to auth if not logged in
   if (!user) {
     console.log('No user, redirecting to auth');
-    navigate('/auth');
+    navigate('/#/auth');
     return null;
   }
 
@@ -55,7 +54,7 @@ const AdminPage: React.FC = () => {
           <h1 className="text-2xl font-playfair text-pink-800 mb-2">Access Denied</h1>
           <p className="text-pink-600 mb-4">You need admin privileges to access this page.</p>
           <div className="space-y-2">
-            <Button onClick={() => navigate('/')} variant="outline" className="border-pink-300 text-pink-700 w-full">
+            <Button onClick={() => navigate('/#/')} variant="outline" className="border-pink-300 text-pink-700 w-full">
               Return to Home
             </Button>
             <Button onClick={() => signOut()} variant="ghost" className="text-pink-600 w-full">
@@ -69,7 +68,7 @@ const AdminPage: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
+    navigate('/#/');
   };
 
   console.log('Rendering admin dashboard');
