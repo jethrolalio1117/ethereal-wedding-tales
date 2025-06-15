@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -11,7 +10,7 @@ const Footer: React.FC = () => {
         <p className="text-sm">&copy; {currentYear} | Forever & Always</p>
         <div className="flex justify-center space-x-4 mt-4">
           <p className="text-xs">Designed with Lovable.dev</p>
-          <Link to="/auth" className="text-xs hover:text-primary underline">
+          <Link to="/auth" className="text-xs hover:text-primary underline transition-colors">
             Admin
           </Link>
         </div>
