@@ -34,8 +34,7 @@ const AuthPage: React.FC = () => {
   // Redirect authenticated admin users immediately
   useEffect(() => {
     if (!authLoading && user && isAdmin) {
-      console.log('Admin user detected, redirecting to admin panel');
-      navigate('/#/admin', { replace: true });
+      navigate('/admin', { replace: true });
     }
   }, [user, authLoading, isAdmin, navigate]);
 
@@ -127,7 +126,7 @@ const AuthPage: React.FC = () => {
               <h1 className="text-3xl font-playfair text-purple-800 mb-2">Access Denied</h1>
               <p className="text-purple-600 text-sm mb-4">You are signed in as {user.email}, but you don't have admin privileges.</p>
               <div className="space-y-2">
-                <Button onClick={() => navigate('/#/')} variant="outline" className="border-purple-300 text-purple-700 w-full">
+                <Button onClick={() => navigate('/')} variant="outline" className="border-purple-300 text-purple-700 w-full">
                   Return to Home
                 </Button>
                 <Button onClick={async () => {

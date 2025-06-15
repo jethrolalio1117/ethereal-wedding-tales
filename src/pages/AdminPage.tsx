@@ -39,14 +39,12 @@ const AdminPage: React.FC = () => {
 
   // Redirect to auth if not logged in
   if (!user) {
-    console.log('No user, redirecting to auth');
-    navigate('/#/auth');
+    navigate('/auth');
     return null;
   }
 
   // Show access denied if not admin
   if (!isAdmin) {
-    console.log('User not admin, showing access denied');
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center p-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-pink-200">
@@ -54,7 +52,7 @@ const AdminPage: React.FC = () => {
           <h1 className="text-2xl font-playfair text-pink-800 mb-2">Access Denied</h1>
           <p className="text-pink-600 mb-4">You need admin privileges to access this page.</p>
           <div className="space-y-2">
-            <Button onClick={() => navigate('/#/')} variant="outline" className="border-pink-300 text-pink-700 w-full">
+            <Button onClick={() => navigate('/')} variant="outline" className="border-pink-300 text-pink-700 w-full">
               Return to Home
             </Button>
             <Button onClick={() => signOut()} variant="ghost" className="text-pink-600 w-full">
@@ -68,7 +66,7 @@ const AdminPage: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/#/');
+    navigate('/');
   };
 
   console.log('Rendering admin dashboard');
