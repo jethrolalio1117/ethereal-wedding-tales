@@ -19,31 +19,9 @@ const HomeSection = () => {
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
       className={`min-h-screen bg-cover bg-center bg-fixed relative overflow-hidden transition-all duration-1000 ${
-        inView ? "petal-burst" : ""
+        inView ? "animate-fade-in-up" : ""
       }`}
     >
-      {/* Animated Petal Burst Overlay */}
-      {inView && (
-        <div className="absolute inset-0 pointer-events-none z-30">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute petal-burst-petal"
-              style={{
-                left: '50%',
-                top: '50%',
-                width: `${18 + Math.random()*22}px`,
-                height: `${18 + Math.random()*24}px`,
-                background: `radial-gradient(circle, #f8bbd0 ${60+Math.random()*20}%, transparent 100%)`,
-                borderRadius: "9999px",
-                opacity: 0.20 + Math.random()*0.25,
-                transform: `translate(-50%, -50%) rotate(${i*30}deg) scale(0.7)`
-              }}
-            />
-          ))}
-        </div>
-      )}
-
       {/* Floating Floral Elements and overlays */}
       <div className="absolute inset-0 pointer-events-none z-10">
         {/* ... keep floral icon overlays ... */}
@@ -79,7 +57,7 @@ const HomeSection = () => {
       </div>
       <div className="absolute inset-0 bg-black bg-opacity-20"></div>
       <div className="relative z-10 flex items-center justify-center min-h-screen text-center text-white px-4">
-        <div className="max-w-4xl mx-auto animate-fade-in-up opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
+        <div className="max-w-4xl mx-auto opacity-0" style={inView ? { animation: "fade-in-up 1s forwards", animationDelay: "0.2s" } : {}}>
           {/* ... keep heading, names, date, details ... */}
           <div className="mb-8 relative">
             <Flower2 className="text-white/80 mx-auto mb-6 animate-pulse" size={64} strokeWidth={1} />

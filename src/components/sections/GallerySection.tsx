@@ -60,11 +60,11 @@ const GallerySection: React.FC = () => {
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
       className={`py-12 transition-all duration-1000 relative ${
-        inView ? "gallery-drop-entrance" : ""
+        inView ? "animate-fade-in-up" : ""
       }`}
     >
       <div className="text-center mb-12">
-        <Camera className={`text-primary mx-auto mb-4 ${inView ? "animate-cam-wiggle" : ""}`} size={64} strokeWidth={1.5} />
+        <Camera className={`text-primary mx-auto mb-4 ${inView ? "animate-fade-in-up" : ""}`} size={64} strokeWidth={1.5} />
         <h1 className="text-4xl md:text-5xl font-playfair text-primary mb-4">Our Cherished Moments</h1>
         <div className="w-24 h-1 bg-secondary mx-auto rounded-full"></div>
       </div>
@@ -72,12 +72,8 @@ const GallerySection: React.FC = () => {
         {images.map((image, index) => (
           <div
             key={image.id}
-            className={`group relative overflow-hidden rounded-lg shadow-xl aspect-w-1 aspect-h-1
-                        gallery-drop animate-photo-shimmer opacity-0`}
-            style={{
-              animationDelay: inView ? `${0.2 + index * 0.13}s` : undefined,
-              animationFillMode: 'forwards'
-            }}
+            className={`group relative overflow-hidden rounded-lg shadow-xl aspect-w-1 aspect-h-1 opacity-0`}
+            style={inView ? { animation: `fade-in-up 0.82s forwards`, animationDelay: `${0.2 + index * 0.13}s` } : {}}
           >
             <img
               src={image.image_url}

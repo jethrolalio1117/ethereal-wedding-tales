@@ -18,7 +18,7 @@ const StorySection = () => {
     <div
       ref={sectionRef as React.RefObject<HTMLDivElement>}
       className={`py-24 bg-gradient-to-br from-pink-50 via-white to-purple-50 relative overflow-hidden transition-all duration-1000 ${
-        inView ? "storybook-page-turn" : ""
+        inView ? "animate-fade-in-up" : ""
       }`}
     >
       {/* Soft floating backgrounds */}
@@ -28,7 +28,7 @@ const StorySection = () => {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-16 animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+        <div className={`text-center mb-16 opacity-0`} style={inView ? { animation: "fade-in-up 0.8s forwards", animationDelay: "0.15s" } : {}}>
           <div className="flex items-center justify-center mb-6">
             <Heart className="text-pink-600 mr-3" size={40} strokeWidth={1.5} />
             <h2 className="text-4xl md:text-6xl font-playfair text-pink-800">Our Love Story</h2>
@@ -39,8 +39,9 @@ const StorySection = () => {
         <div className="max-w-4xl mx-auto space-y-16">
           {sections.map((s, idx) => (
             <div key={s.key}
-              className={`storybook-card animate-page-sweep opacity-0 relative ${s.border} ${inView ? 'delay-' + (idx * 2) : ''}`}
-              style={{ animationDelay: inView ? `${0.4 + idx * 0.18}s` : undefined, animationFillMode: 'forwards' }}>
+              className={`storybook-card relative ${s.border} opacity-0`}
+              style={inView ? { animation: `fade-in-up 0.9s forwards`, animationDelay: `${0.30 + idx * 0.13}s` } : {}}
+            >
               <div className={`bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-2xl border relative overflow-hidden`}>
                 <div className={`absolute ${idx%2? 'bottom-0 left-0':'top-0 right-0'} ${s.flowerColor} opacity-50`} style={{zIndex: 0}}>
                   <Flower2 size={idx %2 ? 100 : 120} />
