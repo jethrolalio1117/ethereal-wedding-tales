@@ -19,15 +19,12 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
-    // Force legacy browser compatibility and avoid module script issues
+    // GitHub Pages compatibility settings
     rollupOptions: {
       output: {
-        // Use more compatible file naming without ES modules
-        entryFileNames: 'assets/index-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
-        format: 'iife', // Use IIFE instead of ES modules to avoid MIME issues
-        inlineDynamicImports: true, // Inline dynamic imports to avoid additional module loading
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
   },
