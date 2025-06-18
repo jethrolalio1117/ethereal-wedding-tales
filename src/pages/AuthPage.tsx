@@ -35,9 +35,28 @@ const AuthPage: React.FC = () => {
   // Redirect authenticated admin users immediately
   useEffect(() => {
     if (!authLoading && user && isAdmin) {
+      console.log('🔐 User authenticated as admin, redirecting to /admin');
       navigate('/admin', { replace: true });
     }
   }, [user, authLoading, isAdmin, navigate]);
+
+  // Handle OAuth redirect from Google
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (data?.session && !error) {
+        console.log('🔗 OAuth session detected, user:', data.session.user.email);
+        // Let the auth system handle the redirect via the above useEffect
+      }
+    };
+
+    // Check if this is an OAuth callback (has authentication fragments)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    if (hashParams.get('access_token') || hashParams.get('error')) {
+      console.log('🔗 OAuth callback detected');
+      handleAuthCallback();
+    }
+  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,11 +64,11 @@ const AuthPage: React.FC = () => {
 
     try {
       if (isSignUp) {
-        // Determine the correct redirect URL for email (HashRouter compatible)
+        // For email verification, redirect to base URL and let app handle routing
         const isProduction = window.location.hostname === 'lalio-villaruz-wedding.xyz';
         const emailRedirectUrl = isProduction 
-          ? 'https://lalio-villaruz-wedding.xyz/#/admin'
-          : `${window.location.origin}/#/admin`;
+          ? 'https://lalio-villaruz-wedding.xyz/'
+          : `${window.location.origin}/`;
 
         const { error } = await supabase.auth.signUp({
           email,
@@ -96,11 +115,11 @@ const AuthPage: React.FC = () => {
     console.log('Starting Google Sign In');
     console.log('Current origin:', window.location.origin);
     
-    // Determine the correct redirect URL for HashRouter
+    // For HashRouter, redirect to the base URL and let the app handle routing
     const isProduction = window.location.hostname === 'lalio-villaruz-wedding.xyz';
     const redirectUrl = isProduction 
-      ? 'https://lalio-villaruz-wedding.xyz/#/admin'
-      : `${window.location.origin}/#/admin`;
+      ? 'https://lalio-villaruz-wedding.xyz/'
+      : `${window.location.origin}/`;
     
     console.log('Redirect URL will be:', redirectUrl);
     
