@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
@@ -19,6 +19,7 @@ const queryClient = new QueryClient();
 // Debug component to log route changes
 const RouteDebugger = () => {
   console.log('📍 Current pathname:', window.location.pathname);
+  console.log('📍 Current hash:', window.location.hash);
   console.log('📍 Current URL:', window.location.href);
   return null;
 };
@@ -42,7 +43,7 @@ const DebugIndicator = () => {
       z-index: 9999;
       font-family: monospace;
     `;
-    indicator.textContent = '🔧 App Component Loaded';
+    indicator.textContent = '🔧 App Component Loaded (HashRouter)';
     document.body.appendChild(indicator);
     
     setTimeout(() => {
@@ -59,7 +60,7 @@ const App = () => {
   try {
     console.log("📦 Checking dependencies...");
     console.log("- QueryClient:", !!QueryClient);
-    console.log("- BrowserRouter:", !!BrowserRouter);
+    console.log("- HashRouter:", !!HashRouter);
     console.log("- AuthProvider:", !!AuthProvider);
     console.log("- Layout:", !!Layout);
     console.log("- Index:", !!Index);
@@ -73,7 +74,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <DebugIndicator />
-            <BrowserRouter>
+            <HashRouter>
               <RouteDebugger />
               <Routes>
                 <Route path="/test" element={
@@ -105,12 +106,12 @@ const App = () => {
                 {/* Catch-all for any other route */}
                 <Route path="*" element={
                   <>
-                    {console.log('❓ Rendering NotFound route for path:', window.location.pathname)}
+                    {console.log('❓ Rendering NotFound route for path:', window.location.hash)}
                     <NotFound />
                   </>
                 } />
               </Routes>
-            </BrowserRouter>
+            </HashRouter>
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>

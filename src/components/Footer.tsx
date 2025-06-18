@@ -6,10 +6,27 @@ const Footer: React.FC = () => {
   
   const currentYear = new Date().getFullYear();
   
+  const handleTestClick = (e: React.MouseEvent) => {
+    console.log("🧪 Test link clicked!");
+    console.log("📍 Current location:", window.location.href);
+    console.log("🎯 Will navigate to: /#/test");
+    
+    // Add visual feedback
+    const target = e.currentTarget as HTMLElement;
+    const originalBg = target.style.backgroundColor;
+    target.style.backgroundColor = 'green';
+    target.style.color = 'white';
+    
+    setTimeout(() => {
+      target.style.backgroundColor = originalBg;
+      target.style.color = '';
+    }, 500);
+  };
+  
   const handleAdminClick = (e: React.MouseEvent) => {
     console.log("🖱️ Admin link clicked!");
     console.log("📍 Current location:", window.location.href);
-    console.log("🎯 Click event:", e);
+    console.log("🎯 Will navigate to: /#/auth");
     console.log("🔗 Target element:", e.currentTarget);
     
     // Add visual feedback
@@ -45,7 +62,7 @@ const Footer: React.FC = () => {
       z-index: 9999;
       font-family: monospace;
     `;
-    indicator.textContent = '👣 Footer Rendered';
+    indicator.textContent = '👣 Footer Rendered (Hash)';
     document.body.appendChild(indicator);
     
     setTimeout(() => {
@@ -68,10 +85,12 @@ const Footer: React.FC = () => {
         <p className="text-sm">&copy; {currentYear} | Forever & Always</p>
         <div className="flex justify-center space-x-4 mt-4">
           <p className="text-xs">Designed with Lovable.dev</p>
+          
           {/* Test link to verify routing */}
           <Link 
             to="/test" 
             className="text-xs hover:text-primary underline transition-colors"
+            onClick={handleTestClick}
             style={{ 
               border: '2px solid blue', 
               padding: '2px 4px',
@@ -80,8 +99,9 @@ const Footer: React.FC = () => {
               marginRight: '10px'
             }}
           >
-            🧪 Test
+            🧪 Test (Hash)
           </Link>
+          
           {/* Admin link using React Router */}
           <Link 
             to="/auth" 
@@ -94,7 +114,7 @@ const Footer: React.FC = () => {
               color: 'black'
             }}
           >
-            🔧 Admin (DEBUG)
+            🔧 Admin (Hash)
           </Link>
         </div>
       </div>
