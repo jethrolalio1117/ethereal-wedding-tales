@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { LogIn, UserPlus, Flower2 } from 'lucide-react';
+import { Flower2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 
 // Google Icon SVG
@@ -22,10 +20,6 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const AuthPage: React.FC = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user, loading: authLoading, isAdmin } = useAuth();
@@ -58,62 +52,13 @@ const AuthPage: React.FC = () => {
     }
   }, []);
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
 
-    try {
-      if (isSignUp) {
-        // For email verification, redirect to base URL and let app handle routing
-        const isProduction = window.location.hostname === 'lalio-villaruz-wedding.xyz';
-        const emailRedirectUrl = isProduction 
-          ? 'https://lalio-villaruz-wedding.xyz/'
-          : `${window.location.origin}/`;
-
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: emailRedirectUrl,
-            data: {
-              full_name: fullName,
-            }
-          }
-        });
-        if (error) throw error;
-
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
-        });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Signed in successfully!",
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Authentication Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Google Sign In
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    console.log('Starting Google Sign In');
-    console.log('Current origin:', window.location.origin);
+    console.log('🔐 Starting Google Sign In');
+    console.log('🌐 Current origin:', window.location.origin);
     
     // For HashRouter, redirect to the base URL and let the app handle routing
     const isProduction = window.location.hostname === 'lalio-villaruz-wedding.xyz';
@@ -121,17 +66,21 @@ const AuthPage: React.FC = () => {
       ? 'https://lalio-villaruz-wedding.xyz/'
       : `${window.location.origin}/`;
     
-    console.log('Redirect URL will be:', redirectUrl);
+    console.log('🔗 Redirect URL will be:', redirectUrl);
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl
+        redirectTo: redirectUrl,
+        queryParams: {
+          prompt: 'select_account', // Force account selection every time
+          access_type: 'offline'
+        }
       },
     });
     
     if (error) {
-      console.error('Google OAuth error:', error);
+      console.error('❌ Google OAuth error:', error);
       toast({
         title: "Google Sign-In Error",
         description: error.message || "Please try again.",
@@ -191,97 +140,32 @@ const AuthPage: React.FC = () => {
       <div className="max-w-md w-full">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-purple-100">
           <div className="text-center mb-8">
-            <Flower2 className="text-purple-500 mx-auto mb-4" size={48} strokeWidth={1.5} />
-            <h1 className="text-3xl font-playfair text-purple-800 mb-2">
-              {isSignUp ? 'Create Admin Account' : 'Admin Login'}
+            <Flower2 className="text-purple-500 mx-auto mb-4" size={64} strokeWidth={1.5} />
+            <h1 className="text-4xl font-playfair text-purple-800 mb-4">
+              Admin Login
             </h1>
-            <p className="text-purple-600 text-sm">Manage your ethereal wedding website</p>
+            <p className="text-purple-600 text-lg mb-2">Manage your ethereal wedding website</p>
+            <p className="text-purple-500 text-sm">Sign in with your authorized Google account</p>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-6">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-purple-700">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Your full name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  className="border-purple-200 focus:border-purple-400"
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-purple-700">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="border-purple-200 focus:border-purple-400"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-purple-700">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="border-purple-200 focus:border-purple-400"
-              />
-            </div>
-
+          <div className="space-y-4">
             <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-              disabled={loading}
-            >
-              {loading ? (
-                'Processing...'
-              ) : (
-                <>
-                  {isSignUp ? <UserPlus className="mr-2" size={18} /> : <LogIn className="mr-2" size={18} />}
-                  {isSignUp ? 'Create Account' : 'Sign In'}
-                </>
-              )}
-            </Button>
-          </form>
-
-          {!isSignUp && (
-            <div className="mt-6">
-              <Button
-                type="button"
-                onClick={handleGoogleSignIn}
-                className="w-full bg-white text-purple-800 border border-purple-200 hover:bg-purple-50 font-medium shadow-none flex items-center justify-center space-x-2"
-                disabled={loading}
-                variant="outline"
-              >
-                <GoogleIcon className="mr-2" />
-                Continue with Google
-              </Button>
-              <div className="text-xs text-center text-purple-600 mt-1">
-                Only admin accounts are allowed access.
-              </div>
-            </div>
-          )}
-
-          <div className="text-center mt-6">
-            <button
               type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-purple-600 hover:text-purple-800 text-sm underline"
+              onClick={handleGoogleSignIn}
+              className="w-full bg-white text-purple-800 border-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300 font-medium text-lg py-4 flex items-center justify-center space-x-3 transition-all duration-200"
+              disabled={loading}
+              variant="outline"
             >
-              {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-            </button>
+              <GoogleIcon />
+              <span>{loading ? 'Signing in...' : 'Continue with Google'}</span>
+            </Button>
+            
+            <div className="text-center">
+              <p className="text-xs text-purple-600 bg-purple-50 p-3 rounded-lg">
+                <span className="font-medium">🔒 Admin Access Only</span><br/>
+                Only authorized admin accounts can access the wedding management dashboard.
+              </p>
+            </div>
           </div>
         </div>
       </div>
