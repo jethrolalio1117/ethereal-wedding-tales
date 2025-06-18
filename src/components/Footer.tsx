@@ -49,7 +49,10 @@ export function Footer() {
           </Button>
           
           <Button 
-            onClick={handleSignOut}
+            onClick={() => {
+              console.log('🔐 Admin button clicked - navigating to auth');
+              navigate('/auth');
+            }}
             variant="outline" 
             size="sm"
             className="mr-2"
@@ -59,8 +62,8 @@ export function Footer() {
 
           <Button 
             onClick={() => {
-              console.log('🧪 Manual navigation to #/auth');
-              navigate('/#/auth');
+              console.log('🧪 Manual navigation to /auth');
+              navigate('/auth');
             }}
             variant="outline" 
             size="sm"
@@ -71,8 +74,8 @@ export function Footer() {
 
           <Button 
             onClick={() => {
-              console.log('🧪 Manual navigation to #/debug');
-              navigate('/#/debug');
+              console.log('🧪 Manual navigation to /debug');
+              navigate('/debug');
             }}
             variant="outline" 
             size="sm"
