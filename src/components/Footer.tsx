@@ -6,8 +6,8 @@ const Footer: React.FC = () => {
   
   const handleAdminClick = (e: React.MouseEvent) => {
     console.log('Admin link clicked!');
-    console.log('Current URL:', window.location.href);
-    console.log('Target path: /auth');
+    console.log('Current location:', window.location.href);
+    // Don't prevent default - let React Router handle it
   };
   
   return (
