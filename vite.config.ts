@@ -19,13 +19,15 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
-    // Avoid inline scripts that might trigger CSP issues
+    // Force legacy browser compatibility and avoid module script issues
     rollupOptions: {
       output: {
-        // Ensure consistent file naming
-        entryFileNames: 'assets/[name]-[hash].js',
+        // Use more compatible file naming without ES modules
+        entryFileNames: 'assets/index-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        format: 'iife', // Use IIFE instead of ES modules to avoid MIME issues
+        inlineDynamicImports: true, // Inline dynamic imports to avoid additional module loading
       }
     }
   },
