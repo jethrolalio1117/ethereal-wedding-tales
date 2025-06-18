@@ -44,11 +44,11 @@ const AuthPage: React.FC = () => {
 
     try {
       if (isSignUp) {
-        // Determine the correct redirect URL for email
+        // Determine the correct redirect URL for email (HashRouter compatible)
         const isProduction = window.location.hostname === 'lalio-villaruz-wedding.xyz';
         const emailRedirectUrl = isProduction 
-          ? 'https://lalio-villaruz-wedding.xyz/admin'
-          : `${window.location.origin}/admin`;
+          ? 'https://lalio-villaruz-wedding.xyz/#/admin'
+          : `${window.location.origin}/#/admin`;
 
         const { error } = await supabase.auth.signUp({
           email,
@@ -95,11 +95,11 @@ const AuthPage: React.FC = () => {
     console.log('Starting Google Sign In');
     console.log('Current origin:', window.location.origin);
     
-    // Determine the correct redirect URL
+    // Determine the correct redirect URL for HashRouter
     const isProduction = window.location.hostname === 'lalio-villaruz-wedding.xyz';
     const redirectUrl = isProduction 
-      ? 'https://lalio-villaruz-wedding.xyz/admin'
-      : `${window.location.origin}/admin`;
+      ? 'https://lalio-villaruz-wedding.xyz/#/admin'
+      : `${window.location.origin}/#/admin`;
     
     console.log('Redirect URL will be:', redirectUrl);
     
