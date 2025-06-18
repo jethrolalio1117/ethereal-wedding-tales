@@ -6,6 +6,32 @@ const Footer: React.FC = () => {
   
   const currentYear = new Date().getFullYear();
   
+  const handleManualNavTest = () => {
+    console.log("🔧 Manual navigation test clicked!");
+    console.log("📍 Before navigation:", window.location.href);
+    
+    // Try manual hash navigation
+    window.location.hash = '#/test';
+    
+    setTimeout(() => {
+      console.log("📍 After navigation:", window.location.href);
+      console.log("📍 Current hash:", window.location.hash);
+    }, 100);
+  };
+  
+  const handleManualAuthTest = () => {
+    console.log("🔧 Manual auth navigation test clicked!");
+    console.log("📍 Before navigation:", window.location.href);
+    
+    // Try manual hash navigation
+    window.location.hash = '#/auth';
+    
+    setTimeout(() => {
+      console.log("📍 After navigation:", window.location.href);
+      console.log("📍 Current hash:", window.location.hash);
+    }, 100);
+  };
+  
   const handleTestClick = (e: React.MouseEvent) => {
     console.log("🧪 Test link clicked!");
     console.log("📍 Current location:", window.location.href);
@@ -83,8 +109,54 @@ const Footer: React.FC = () => {
       <div className="container mx-auto text-center text-muted-foreground">
         <p className="font-playfair text-lg">With Love, L & M</p>
         <p className="text-sm">&copy; {currentYear} | Forever & Always</p>
-        <div className="flex justify-center space-x-4 mt-4">
+        <div className="flex justify-center space-x-2 mt-4 flex-wrap">
           <p className="text-xs">Designed with Lovable.dev</p>
+          
+          {/* Debug and Manual navigation test buttons */}
+          <Link 
+            to="/debug" 
+            className="text-xs hover:text-primary underline transition-colors"
+            style={{ 
+              border: '2px solid green', 
+              padding: '2px 4px',
+              background: 'green',
+              color: 'white',
+              margin: '2px',
+              textDecoration: 'none'
+            }}
+          >
+            🐛 DEBUG
+          </Link>
+          
+          <button
+            onClick={handleManualNavTest}
+            style={{
+              border: '2px solid purple',
+              padding: '2px 4px',
+              background: 'purple',
+              color: 'white',
+              fontSize: '10px',
+              cursor: 'pointer',
+              margin: '2px'
+            }}
+          >
+            🔧 Manual Test
+          </button>
+          
+          <button
+            onClick={handleManualAuthTest}
+            style={{
+              border: '2px solid purple',
+              padding: '2px 4px',
+              background: 'purple',
+              color: 'white',
+              fontSize: '10px',
+              cursor: 'pointer',
+              margin: '2px'
+            }}
+          >
+            🔧 Manual Auth
+          </button>
           
           {/* Test link to verify routing */}
           <Link 
@@ -96,7 +168,8 @@ const Footer: React.FC = () => {
               padding: '2px 4px',
               background: 'lightblue',
               color: 'black',
-              marginRight: '10px'
+              margin: '2px',
+              textDecoration: 'none'
             }}
           >
             🧪 Test (Hash)
@@ -111,7 +184,9 @@ const Footer: React.FC = () => {
               border: '2px solid red', 
               padding: '2px 4px',
               background: 'yellow',
-              color: 'black'
+              color: 'black',
+              margin: '2px',
+              textDecoration: 'none'
             }}
           >
             🔧 Admin (Hash)

@@ -11,6 +11,7 @@ import AuthPage from "./pages/AuthPage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 import TestPage from "./pages/TestPage";
+import DebugPage from "./pages/DebugPage";
 
 console.log("🎯 App.tsx loading...");
 
@@ -77,39 +78,16 @@ const App = () => {
             <HashRouter>
               <RouteDebugger />
               <Routes>
-                <Route path="/test" element={
-                  <>
-                    {console.log('🧪 Rendering TestPage route')}
-                    <TestPage />
-                  </>
-                } />
-                <Route path="/auth" element={
-                  <>
-                    {console.log('🔐 Rendering AuthPage route')}
-                    <AuthPage />
-                  </>
-                } />
-                <Route path="/admin" element={
-                  <>
-                    {console.log('👑 Rendering AdminPage route')}
-                    <AdminPage />
-                  </>
-                } />
+                <Route path="/debug" element={<DebugPage />} />
+                <Route path="/test" element={<TestPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/admin" element={<AdminPage />} />
                 <Route path="/" element={
-                  <>
-                    {console.log('🏠 Rendering Index route')}
-                    <Layout>
-                      <Index />
-                    </Layout>
-                  </>
+                  <Layout>
+                    <Index />
+                  </Layout>
                 } />
-                {/* Catch-all for any other route */}
-                <Route path="*" element={
-                  <>
-                    {console.log('❓ Rendering NotFound route for path:', window.location.hash)}
-                    <NotFound />
-                  </>
-                } />
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </HashRouter>
           </TooltipProvider>
