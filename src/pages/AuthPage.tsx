@@ -44,11 +44,17 @@ const AuthPage: React.FC = () => {
 
     try {
       if (isSignUp) {
+        // Determine the correct redirect URL for email
+        const isProduction = window.location.hostname === 'lalio-villaruz-wedding.xyz';
+        const emailRedirectUrl = isProduction 
+          ? 'https://lalio-villaruz-wedding.xyz/admin'
+          : `${window.location.origin}/admin`;
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/admin`,
+            emailRedirectTo: emailRedirectUrl,
             data: {
               full_name: fullName,
             }
@@ -86,13 +92,26 @@ const AuthPage: React.FC = () => {
   // Google Sign In
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    console.log('Starting Google Sign In');
+    console.log('Current origin:', window.location.origin);
+    
+    // Determine the correct redirect URL
+    const isProduction = window.location.hostname === 'lalio-villaruz-wedding.xyz';
+    const redirectUrl = isProduction 
+      ? 'https://lalio-villaruz-wedding.xyz/admin'
+      : `${window.location.origin}/admin`;
+    
+    console.log('Redirect URL will be:', redirectUrl);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/admin`
+        redirectTo: redirectUrl
       },
     });
+    
     if (error) {
+      console.error('Google OAuth error:', error);
       toast({
         title: "Google Sign-In Error",
         description: error.message || "Please try again.",
