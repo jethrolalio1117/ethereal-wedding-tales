@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Test - Wedding Site</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .test-box {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        #js-status {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+        .success {
+            color: #51cf66 !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 JavaScript Test Page</h1>
+    
+    <div class="test-box">
+        <h2>JavaScript Status</h2>
+        <div id="js-status">❌ JavaScript NOT Working</div>
+        <p id="details">If you see this red message, JavaScript is blocked or not loading.</p>
+    </div>
+    
+    <div class="test-box">
+        <h2>URL Information</h2>
+        <p><strong>Current URL:</strong> <span id="current-url">Unknown</span></p>
+        <p><strong>Domain:</strong> <span id="domain">Unknown</span></p>
+        <p><strong>Protocol:</strong> <span id="protocol">Unknown</span></p>
+    </div>
+    
+    <div class="test-box">
+        <h2>Test Actions</h2>
+        <button onclick="testBasicJS()" style="padding: 10px 20px; margin: 10px; background: #51cf66; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            🧪 Test Basic JS
+        </button>
+        <button onclick="testHashNavigation()" style="padding: 10px 20px; margin: 10px; background: #339af0; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            🔗 Test Hash Navigation
+        </button>
+        <a href="/" style="display: inline-block; padding: 10px 20px; margin: 10px; background: #ff6b6b; color: white; text-decoration: none; border-radius: 5px;">
+            🏠 Back to Main Site
+        </a>
+    </div>
+    
+    <div class="test-box">
+        <h2>Console Output</h2>
+        <div id="console-output" style="background: black; color: lime; padding: 10px; text-align: left; font-family: monospace; border-radius: 5px;">
+            <div>Waiting for JavaScript...</div>
+        </div>
+    </div>
+
+    <script>
+        console.log("🚀 JavaScript test script starting...");
+        
+        // Function to add console output to the page
+        function addConsoleOutput(message) {
+            const output = document.getElementById('console-output');
+            const div = document.createElement('div');
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            output.appendChild(div);
+            console.log(message);
+        }
+        
+        // Test basic JavaScript functionality
+        function testBasicJS() {
+            addConsoleOutput("✅ Basic JavaScript function called!");
+            document.getElementById('js-status').innerHTML = "✅ JavaScript IS Working!";
+            document.getElementById('js-status').className = "success";
+            document.getElementById('details').innerHTML = "Great! JavaScript is loading and executing properly.";
+            
+            // Test some basic DOM manipulation
+            try {
+                const testDiv = document.createElement('div');
+                testDiv.innerHTML = "✅ DOM manipulation works";
+                addConsoleOutput("✅ DOM manipulation test passed");
+            } catch (error) {
+                addConsoleOutput("❌ DOM manipulation failed: " + error.message);
+            }
+        }
+        
+        // Test hash navigation
+        function testHashNavigation() {
+            addConsoleOutput("🔗 Testing hash navigation...");
+            const originalHash = window.location.hash;
+            
+            // Try to change hash
+            window.location.hash = '#test-navigation';
+            
+            setTimeout(() => {
+                if (window.location.hash === '#test-navigation') {
+                    addConsoleOutput("✅ Hash navigation works!");
+                } else {
+                    addConsoleOutput("❌ Hash navigation failed");
+                }
+                
+                // Reset hash
+                window.location.hash = originalHash;
+            }, 100);
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            addConsoleOutput("🚀 JavaScript loaded successfully!");
+            
+            // Update URL information
+            document.getElementById('current-url').textContent = window.location.href;
+            document.getElementById('domain').textContent = window.location.hostname;
+            document.getElementById('protocol').textContent = window.location.protocol;
+            
+            // Auto-test basic functionality
+            setTimeout(() => {
+                testBasicJS();
+            }, 500);
+            
+            addConsoleOutput("📝 Page initialization complete");
+        });
+        
+        // Test immediate execution
+        addConsoleOutput("⚡ Script executing immediately");
+        document.getElementById('js-status').innerHTML = "⚡ JavaScript Loading...";
+        document.getElementById('js-status').style.color = "#ffd43b";
+    </script>
+</body>
+</html> 

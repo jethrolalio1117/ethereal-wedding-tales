@@ -177,7 +177,7 @@ const Footer: React.FC = () => {
           
           {/* Admin link using React Router */}
           <Link 
-            to="/auth" 
+            to="/#/auth" 
             className="text-xs hover:text-primary underline transition-colors"
             onClick={handleAdminClick}
             style={{ 
