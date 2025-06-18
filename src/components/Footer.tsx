@@ -1,200 +1,102 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { Button } from './ui/button';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const Footer: React.FC = () => {
-  console.log("👣 Footer component rendering...");
-  
-  const currentYear = new Date().getFullYear();
-  
-  const handleManualNavTest = () => {
-    console.log("🔧 Manual navigation test clicked!");
-    console.log("📍 Before navigation:", window.location.href);
-    
-    // Try manual hash navigation
-    window.location.hash = '#/test';
-    
-    setTimeout(() => {
-      console.log("📍 After navigation:", window.location.href);
-      console.log("📍 Current hash:", window.location.hash);
-    }, 100);
+export function Footer() {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [debugInfo, setDebugInfo] = useState(false);
+
+  const handleSignOut = async () => {
+    console.log('🚪 Footer: Sign out clicked');
+    try {
+      await signOut();
+      console.log('✅ Footer: Sign out successful');
+      navigate('/#');
+    } catch (error) {
+      console.error('❌ Footer: Sign out failed:', error);
+    }
   };
-  
-  const handleManualAuthTest = () => {
-    console.log("🔧 Manual auth navigation test clicked!");
-    console.log("📍 Before navigation:", window.location.href);
-    
-    // Try manual hash navigation
-    window.location.hash = '#/auth';
-    
-    setTimeout(() => {
-      console.log("📍 After navigation:", window.location.href);
-      console.log("📍 Current hash:", window.location.hash);
-    }, 100);
+
+  const toggleDebugInfo = () => {
+    setDebugInfo(!debugInfo);
+    console.log('🔍 Footer: Debug info toggled:', !debugInfo);
   };
-  
-  const handleTestClick = (e: React.MouseEvent) => {
-    console.log("🧪 Test link clicked!");
-    console.log("📍 Current location:", window.location.href);
-    console.log("🎯 Will navigate to: /#/test");
-    
-    // Add visual feedback
-    const target = e.currentTarget as HTMLElement;
-    const originalBg = target.style.backgroundColor;
-    target.style.backgroundColor = 'green';
-    target.style.color = 'white';
-    
-    setTimeout(() => {
-      target.style.backgroundColor = originalBg;
-      target.style.color = '';
-    }, 500);
-  };
-  
-  const handleAdminClick = (e: React.MouseEvent) => {
-    console.log("🖱️ Admin link clicked!");
-    console.log("📍 Current location:", window.location.href);
-    console.log("🎯 Will navigate to: /#/auth");
-    console.log("🔗 Target element:", e.currentTarget);
-    
-    // Add visual feedback
-    const target = e.currentTarget as HTMLElement;
-    const originalBg = target.style.backgroundColor;
-    target.style.backgroundColor = 'red';
-    target.style.color = 'white';
-    
-    setTimeout(() => {
-      target.style.backgroundColor = originalBg;
-      target.style.color = '';
-    }, 500);
-    
-    // Don't prevent default - let React Router handle it
-    console.log("✅ Click handler completed, letting React Router handle navigation...");
-  };
-  
-  // Add visual indicator that Footer rendered
-  React.useEffect(() => {
-    console.log("👣 Footer useEffect running...");
-    
-    const indicator = document.createElement('div');
-    indicator.id = 'footer-debug-indicator';
-    indicator.style.cssText = `
-      position: fixed; 
-      bottom: 10px; 
-      left: 10px; 
-      background: orange; 
-      color: white; 
-      padding: 5px 10px; 
-      border-radius: 5px; 
-      font-size: 12px; 
-      z-index: 9999;
-      font-family: monospace;
-    `;
-    indicator.textContent = '👣 Footer Rendered (Hash)';
-    document.body.appendChild(indicator);
-    
-    setTimeout(() => {
-      if (indicator.parentNode) {
-        indicator.remove();
-      }
-    }, 4000);
-    
-    return () => {
-      console.log("👣 Footer cleanup...");
-    };
-  }, []);
-  
-  console.log("👣 Footer returning JSX...");
-  
+
+  console.log('👣 Footer render - Current location:', {
+    pathname: location.pathname,
+    hash: location.hash,
+    search: location.search,
+    full: `${location.pathname}${location.search}${location.hash}`
+  });
+
   return (
-    <footer className="bg-muted py-8 mt-16 animate-fade-in">
-      <div className="container mx-auto text-center text-muted-foreground">
-        <p className="font-playfair text-lg">With Love, L & M</p>
-        <p className="text-sm">&copy; {currentYear} | Forever & Always</p>
-        <div className="flex justify-center space-x-2 mt-4 flex-wrap">
-          <p className="text-xs">Designed with Lovable.dev</p>
-          
-          {/* Debug and Manual navigation test buttons */}
-          <Link 
-            to="/debug" 
-            className="text-xs hover:text-primary underline transition-colors"
-            style={{ 
-              border: '2px solid green', 
-              padding: '2px 4px',
-              background: 'green',
-              color: 'white',
-              margin: '2px',
-              textDecoration: 'none'
-            }}
+    <footer className="bg-gray-900 text-white py-8">
+      <div className="container mx-auto px-4 text-center">
+        <p>&copy; 2024 Lalio & Villaruz Wedding. All rights reserved.</p>
+        
+        {/* Debug Section */}
+        <div className="mt-4 space-y-2">
+          <Button 
+            onClick={toggleDebugInfo}
+            variant="outline" 
+            size="sm"
+            className="mr-2"
           >
-            🐛 DEBUG
-          </Link>
+            🔍 Debug Info
+          </Button>
           
-          <button
-            onClick={handleManualNavTest}
-            style={{
-              border: '2px solid purple',
-              padding: '2px 4px',
-              background: 'purple',
-              color: 'white',
-              fontSize: '10px',
-              cursor: 'pointer',
-              margin: '2px'
-            }}
+          <Button 
+            onClick={handleSignOut}
+            variant="outline" 
+            size="sm"
+            className="mr-2"
           >
-            🔧 Manual Test
-          </button>
-          
-          <button
-            onClick={handleManualAuthTest}
-            style={{
-              border: '2px solid purple',
-              padding: '2px 4px',
-              background: 'purple',
-              color: 'white',
-              fontSize: '10px',
-              cursor: 'pointer',
-              margin: '2px'
+            🔐 Admin
+          </Button>
+
+          <Button 
+            onClick={() => {
+              console.log('🧪 Manual navigation to #/auth');
+              navigate('/#/auth');
             }}
+            variant="outline" 
+            size="sm"
+            className="mr-2"
           >
-            🔧 Manual Auth
-          </button>
-          
-          {/* Test link to verify routing */}
-          <Link 
-            to="/test" 
-            className="text-xs hover:text-primary underline transition-colors"
-            onClick={handleTestClick}
-            style={{ 
-              border: '2px solid blue', 
-              padding: '2px 4px',
-              background: 'lightblue',
-              color: 'black',
-              margin: '2px',
-              textDecoration: 'none'
+            📝 Test Auth
+          </Button>
+
+          <Button 
+            onClick={() => {
+              console.log('🧪 Manual navigation to #/debug');
+              navigate('/#/debug');
             }}
+            variant="outline" 
+            size="sm"
+            className="mr-2"
           >
-            🧪 Test (Hash)
-          </Link>
-          
-          {/* Admin link using React Router */}
-          <Link 
-            to="/#/auth" 
-            className="text-xs hover:text-primary underline transition-colors"
-            onClick={handleAdminClick}
-            style={{ 
-              border: '2px solid red', 
-              padding: '2px 4px',
-              background: 'yellow',
-              color: 'black',
-              margin: '2px',
-              textDecoration: 'none'
-            }}
-          >
-            🔧 Admin (Hash)
-          </Link>
+            🐛 Debug Page
+          </Button>
         </div>
+
+        {debugInfo && (
+          <div className="mt-4 p-4 bg-gray-800 rounded text-left text-sm">
+            <h3 className="font-bold mb-2">🔍 Debug Information:</h3>
+            <div className="space-y-1">
+              <p><strong>Location:</strong> {location.pathname}{location.search}{location.hash}</p>
+              <p><strong>Timestamp:</strong> {new Date().toISOString()}</p>
+              <p><strong>User Agent:</strong> {navigator.userAgent}</p>
+              <p><strong>URL:</strong> {window.location.href}</p>
+              <p><strong>Origin:</strong> {window.location.origin}</p>
+              <p><strong>Protocol:</strong> {window.location.protocol}</p>
+              <p><strong>Host:</strong> {window.location.host}</p>
+            </div>
+          </div>
+        )}
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}

@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
@@ -12,6 +12,10 @@ import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 import TestPage from "./pages/TestPage";
 import DebugPage from "./pages/DebugPage";
+import GalleryPage from "./pages/GalleryPage";
+import StoryPage from "./pages/StoryPage";
+import RSVPPage from "./pages/RSVPPage";
+import './App.css';
 
 console.log("🎯 App.tsx loading...");
 
@@ -56,12 +60,15 @@ const DebugIndicator = () => {
 };
 
 const App = () => {
-  console.log("🚀 App component rendering...");
+  console.log("🚀 App component initializing...");
+  console.log('📍 Current URL:', window.location.href);
+  console.log('🏠 Origin:', window.location.origin);
+  console.log('📦 Hash:', window.location.hash);
   
   try {
     console.log("📦 Checking dependencies...");
     console.log("- QueryClient:", !!QueryClient);
-    console.log("- HashRouter:", !!HashRouter);
+    console.log("- HashRouter:", !!Router);
     console.log("- AuthProvider:", !!AuthProvider);
     console.log("- Layout:", !!Layout);
     console.log("- Index:", !!Index);
@@ -75,21 +82,20 @@ const App = () => {
             <Toaster />
             <Sonner />
             <DebugIndicator />
-            <HashRouter>
+            <Router>
               <RouteDebugger />
               <Routes>
-                <Route path="/debug" element={<DebugPage />} />
-                <Route path="/test" element={<TestPage />} />
+                <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/admin" element={<AdminPage />} />
-                <Route path="/" element={
-                  <Layout>
-                    <Index />
-                  </Layout>
-                } />
+                <Route path="/gallery" element={<GalleryPage />} />
+                <Route path="/story" element={<StoryPage />} />
+                <Route path="/rsvp" element={<RSVPPage />} />
+                <Route path="/debug" element={<DebugPage />} />
+                <Route path="/test" element={<TestPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </HashRouter>
+            </Router>
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>

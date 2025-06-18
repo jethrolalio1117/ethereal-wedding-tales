@@ -1,92 +1,56 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const TestPage: React.FC = () => {
-  console.log("🧪 TestPage rendering...");
-  
-  React.useEffect(() => {
-    console.log("🧪 TestPage mounted successfully!");
-    
-    // Add visual confirmation
-    const indicator = document.createElement('div');
-    indicator.style.cssText = `
-      position: fixed; 
-      top: 50%; 
-      left: 50%; 
-      transform: translate(-50%, -50%);
-      background: green; 
-      color: white; 
-      padding: 20px; 
-      border-radius: 10px; 
-      font-size: 18px; 
-      z-index: 10000;
-      font-family: Arial;
-      text-align: center;
-    `;
-    indicator.innerHTML = `
-      <h2>🧪 TEST PAGE LOADED!</h2>
-      <p>Routing is working!</p>
-      <p>URL: ${window.location.href}</p>
-    `;
-    document.body.appendChild(indicator);
-    
-    setTimeout(() => {
-      if (indicator.parentNode) {
-        indicator.remove();
-      }
-    }, 5000);
-  }, []);
-  
+export default function TestPage() {
+  const navigate = useNavigate();
+
+  console.log('🧪 TestPage rendered successfully!');
+
   return (
-    <div style={{
-      padding: '20px',
-      textAlign: 'center',
-      background: '#f0f0f0',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }}>
-      <h1 style={{ color: 'green', fontSize: '3em' }}>🧪 TEST PAGE</h1>
-      <p style={{ fontSize: '1.5em', margin: '20px 0' }}>
-        If you can see this page, React Router is working!
-      </p>
-      <p style={{ fontSize: '1.2em', color: '#666' }}>
-        Current URL: {window.location.href}
-      </p>
-      <div style={{ marginTop: '30px' }}>
-        <Link 
-          to="/" 
-          style={{
-            background: 'blue',
-            color: 'white',
-            padding: '10px 20px',
-            textDecoration: 'none',
-            borderRadius: '5px',
-            margin: '10px',
-            display: 'inline-block'
-          }}
-        >
-          🏠 Go to Home
-        </Link>
-        <Link 
-          to="/auth" 
-          style={{
-            background: 'red',
-            color: 'white',
-            padding: '10px 20px',
-            textDecoration: 'none',
-            borderRadius: '5px',
-            margin: '10px',
-            display: 'inline-block'
-          }}
-        >
-          🔐 Go to Auth
-        </Link>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-4">
+        <Button onClick={() => navigate(-1)} variant="outline">
+          ← Back
+        </Button>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>🧪 Test Page</CardTitle>
+          <CardDescription>
+            If you can see this page, routing is working correctly!
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 bg-green-100 border border-green-400 rounded">
+              <h3 className="text-lg font-semibold text-green-800">✅ Success!</h3>
+              <p className="text-green-700">
+                This test page loaded successfully. This means:
+              </p>
+              <ul className="list-disc list-inside text-green-700 mt-2">
+                <li>React Router (HashRouter) is working</li>
+                <li>Component loading is functional</li>
+                <li>JavaScript execution is working</li>
+                <li>The build deployment is correct</li>
+              </ul>
+            </div>
+
+            <div className="space-x-2">
+              <Button onClick={() => navigate('/')} variant="default">
+                → Go Home
+              </Button>
+              <Button onClick={() => navigate('/debug')} variant="outline">
+                → Debug Page
+              </Button>
+              <Button onClick={() => navigate('/auth')} variant="outline">
+                → Auth Page
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default TestPage; 
+} 
